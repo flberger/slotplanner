@@ -1,0 +1,8 @@
+syntax: glob
+
+*.pyc
+*.rst
+dist/
+MANIFEST*
+*~
+COPYING

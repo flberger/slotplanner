@@ -1,0 +1,47 @@
+README for slotplan
+==================
+
+About
+-----
+
+slotplan is ADD HERE
+
+
+Prerequisites
+-------------
+
+Python    http://www.python.org
+
+
+Installation
+------------
+
+Unzip the file, then at the command line run
+
+    python setup.py install
+
+
+Documentation
+-------------
+
+To read the API documentation, open a shell / DOS window, navigate to the
+slotplan directory, and run
+
+    pydoc slotplan
+
+You can create a HTML version using
+
+    pydoc -w slotplan
+
+
+License
+-------
+
+slotplan is licensed under the GPL. See the file COPYING for details.
+
+
+Author
+------
+
+Florian Berger <florian.berger@posteo.de>
+
