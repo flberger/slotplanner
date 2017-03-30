@@ -26,6 +26,7 @@ import json
 import pathlib
 import os
 import datetime
+import simple.email
 
 VERSION = "0.1.0"
 
