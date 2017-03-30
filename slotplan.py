@@ -48,7 +48,7 @@ class SlotplanWebApp:
        slotplan_db =
        {
        "contributions":
-           {ID:
+           {CONTRIBUTION_ID_STRING:
                {"first_name": FIRST_NAME,
                 "last_name": LAST_NAME,
                 "title": TITLE,
@@ -65,14 +65,14 @@ class SlotplanWebApp:
                ...
            ],
        "schedule":
-           {INDEX_FIRST_1:
-               {INDEX_SECOND_1: ID,
-                INDEX_SECOND_2: ID,
+           {INDEX_FIRST_1_AS_STRING:
+               {INDEX_SECOND_1_AS_STRING: CONTRIBUTION_ID_STRING,
+                INDEX_SECOND_2_AS_STRING: CONTRIBUTION_ID_STRING,
                 ...
                },
-            INDEX_FIRST_2:
-               {INDEX_SECOND_1: ID,
-                INDEX_SECOND_2: ID,
+            INDEX_FIRST_2_AS_STRING:
+               {INDEX_SECOND_1_AS_STRING: CONTRIBUTION_ID_STRING,
+                INDEX_SECOND_2_AS_STRING: CONTRIBUTION_ID_STRING,
                 ...
                },
             ...
@@ -88,6 +88,19 @@ class SlotplanWebApp:
                             "slot_dimension_names": [],
                             "schedule": {}
                            }
+
+        LOGGER.debug("Attempting to read serialised data")
+
+        try:
+            with open("slotplan_db.json", "rt", encoding = "utf8") as f:
+
+                self.slotplan_db = json.loads(f.read())
+
+        except:
+
+            LOGGER.info("Error reading database from file, starting fresh")
+
+            # Using already initialised self.slotplan_db
 
         #REMOVE
         self.test()
@@ -123,21 +136,28 @@ class SlotplanWebApp:
         """Test various things, e.g. data serialisation.
         """
 
-        # Populate with some data
+        LOGGER.debug(self.slotplan_db)
 
-        self.slotplan_db["contributions"][123] = {"first_name": "John",
-                                                  "last_name": "Doe",
-                                                  "title": "My Presentation",
-                                                  "twitter_handle": "@invalid",
-                                                  "email": "john.doe@some.tld",
-                                                  "abstract": "My presenation abstract."
-                                                 }
+        LOGGER.debug("Overwriting slotplan_db with sample data")
+
+        self.slotplan_db = {"contributions": {},
+                            "slot_dimension_names": [],
+                            "schedule": {}
+                           }
+
+        self.slotplan_db["contributions"]["123"] = {"first_name": "John",
+                                                    "last_name": "Doe",
+                                                    "title": "My Presentation",
+                                                    "twitter_handle": "@invalid",
+                                                    "email": "john.doe@some.tld",
+                                                    "abstract": "My presenation abstract."
+                                                   }
 
         self.slotplan_db["slot_dimension_names"].append(["Monday", "Tuesday"])
         self.slotplan_db["slot_dimension_names"].append(["Room 1", "Room 2"])
         self.slotplan_db["slot_dimension_names"].append(["Morning", "Afternoon"])
 
-        self.slotplan_db["schedule"][0] = {0: {1: 123}}
+        self.slotplan_db["schedule"]["0"] = {"0": {"1": "123"}}
 
         self.write()
 
