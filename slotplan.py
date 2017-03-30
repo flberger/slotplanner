@@ -27,6 +27,7 @@ import pathlib
 import os
 import datetime
 import simple.email
+import simple.html
 
 VERSION = "0.1.0"
 
@@ -40,7 +41,6 @@ LOGGER.addHandler(STDERR_HANDLER)
 PORT = 8311
 THREADS = 10
 AUTORELOAD = False
-
 
 class SlotplanWebApp:
     """Slotplan main class, suitable as cherrypy root.
@@ -106,9 +106,29 @@ class SlotplanWebApp:
 
             # Using already initialised self.slotplan_db
 
-        #REMOVE
-        self.test()
+        LOGGER.debug("Attempting to read config")
+
+        self.config = {"__builtins__": None}
         
+        try:
+            with open("slotplan.conf", "rt", encoding = "utf8") as f:
+
+                # The threat model is that anyone who can access the
+                # config can access this source and hence execute
+                # arbitrary code anyway.
+                #
+                exec(f.read(), self.config)
+                
+        except:
+            
+            LOGGER.error("Config file slotplan.conf not found. Creating an empty one.")
+
+            with open("slotplan.conf", "wt", encoding = "utf8") as f:
+
+                f.write('event = ""\n')
+
+            raise
+            
         # Make self.__call__ visible to cherrypy
         #
         self.exposed = True
@@ -119,7 +139,11 @@ class SlotplanWebApp:
         """Called by cherrypy for the / root page.
         """
 
-        return '<html><head><title>Hello World</title></head><body><h1>Hello World</h1><p><a href="/subpage">Go to subpage</a></p></body></html>'
+        page = simple.html.Page("slotplan - {}".format(self.config["event"]))
+
+        page.append("<h1>Slotplan for {}</h1>".format(self.config["event"]))
+
+        return str(page)
 
     def write(self):
         """Serialise the database to disk.
