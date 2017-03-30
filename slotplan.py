@@ -22,6 +22,7 @@
 
 import logging
 import cherrypy
+import json
 
 VERSION = "0.1.0"
 
@@ -64,14 +65,14 @@ class SlotplanWebApp:
                ...
            ],
        "schedule":
-           {FIRST_1:
-               {SECOND_1: ID,
-                SECOND_2: ID,
+           {INDEX_FIRST_1:
+               {INDEX_SECOND_1: ID,
+                INDEX_SECOND_2: ID,
                 ...
                },
-            FIRST_2:
-               {SECOND_1: ID,
-                SECOND_2: ID,
+            INDEX_FIRST_2:
+               {INDEX_SECOND_1: ID,
+                INDEX_SECOND_2: ID,
                 ...
                },
             ...
@@ -88,6 +89,9 @@ class SlotplanWebApp:
                             "schedule": {}
                            }
 
+        #REMOVE
+        self.test()
+        
         # Make self.__call__ visible to cherrypy
         #
         self.exposed = True
@@ -99,6 +103,45 @@ class SlotplanWebApp:
         """
 
         return '<html><head><title>Hello World</title></head><body><h1>Hello World</h1><p><a href="/subpage">Go to subpage</a></p></body></html>'
+
+    def write(self):
+        """Serialise the database to disk.
+        """
+
+        with open("slotplan_db.json", "wt", encoding = "utf8") as f:
+
+            # Write a human-readable, diff- and version
+            # control-friendly representation
+            #
+            f.write(json.dumps(self.slotplan_db,
+                               indent = 4,
+                               sort_keys = True))
+
+        return
+
+    def test(self):
+        """Test various things, e.g. data serialisation.
+        """
+
+        # Populate with some data
+
+        self.slotplan_db["contributions"][123] = {"first_name": "John",
+                                                  "last_name": "Doe",
+                                                  "title": "My Presentation",
+                                                  "twitter_handle": "@invalid",
+                                                  "email": "john.doe@some.tld",
+                                                  "abstract": "My presenation abstract."
+                                                 }
+
+        self.slotplan_db["slot_dimension_names"].append(["Monday", "Tuesday"])
+        self.slotplan_db["slot_dimension_names"].append(["Room 1", "Room 2"])
+        self.slotplan_db["slot_dimension_names"].append(["Morning", "Afternoon"])
+
+        self.slotplan_db["schedule"][0] = {0: {1: 123}}
+
+        self.write()
+
+        return
 
     def subpage(self):
 
