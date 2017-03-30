@@ -1,4 +1,4 @@
-"""DESCRIPTION OF slotplan
+"""A web app to manage a barcamp slot plan.
 
    Copyright (c) 2017 Florian Berger <florian.berger@posteo.de>
 """
@@ -32,17 +32,61 @@ STDERR_HANDLER = logging.StreamHandler()
 STDERR_HANDLER.setFormatter(STDERR_FORMATTER)
 LOGGER.addHandler(STDERR_HANDLER)
 
-PORT = 8000
+PORT = 8311
 THREADS = 10
 AUTORELOAD = False
 
-class WebApp:
-    """Web application main class, suitable as cherrypy root.
+
+class SlotplanWebApp:
+    """Slotplan main class, suitable as cherrypy root.
+
+       All data is stored in SlotplanWebApp.slotplan_db, which is
+       a nested data structure designed for easy JSON serialisation
+       an deserialisation:
+
+       slotplan_db =
+       {
+       "contributions":
+           {ID:
+               {"first_name": FIRST_NAME,
+                "last_name": LAST_NAME,
+                "title": TITLE,
+                "twitter_handle": TWITTER_HANDLE,
+                "email": EMAIL,
+                "abstract": ABSTRACT
+               },
+            ...
+           },
+       "slot_dimension_names":
+           [
+               [FIRST_1, FIRST_2],
+               [SECOND_1, SECOND_2],
+               ...
+           ],
+       "schedule":
+           {FIRST_1:
+               {SECOND_1: ID,
+                SECOND_2: ID,
+                ...
+               },
+            FIRST_2:
+               {SECOND_1: ID,
+                SECOND_2: ID,
+                ...
+               },
+            ...
+           }
+       }
     """
 
     def __init__(self):
-        """Initialise WebApp.
+        """Initialise SlotplanWebApp.
         """
+
+        self.slotplan_db = {"contributions": {},
+                            "slot_dimension_names": [],
+                            "schedule": {}
+                           }
 
         # Make self.__call__ visible to cherrypy
         #
@@ -66,7 +110,7 @@ def main():
     """Main function, for IDE convenience.
     """
 
-    root = WebApp()
+    root = SlotplanWebApp()
 
     config_dict = {"/" : {"tools.sessions.on" : True,
                           "tools.sessions.timeout" : 60},

@@ -97,7 +97,7 @@ setup(name = PACKAGE,
       author = "Florian Berger",
       author_email = "florian.berger@posteo.de",
       url = "http://florian-berger.de/en/software/slotplan",
-      description = PACKAGE + " - DESCRIPTION HERE",
+      description = PACKAGE + " - a web app to manage a barcamp slot plan",
       long_description = LONG_DESCRIPTION,
       license = "GPL",
       py_modules = [PACKAGE],
@@ -110,4 +110,3 @@ setup(name = PACKAGE,
       options = {"build_exe" :
                  {"include_files" : INCLUDE_FILES}
                 })
-
