@@ -42,6 +42,16 @@ PORT = 8311
 THREADS = 10
 AUTORELOAD = False
 
+# Make HTML textareas more compact
+#
+simple.html.ROWS = 8
+
+CSS = """body {
+    background: rgb(250, 250, 250) ;
+    padding: 1em 12em ;
+    }
+"""
+
 class SlotplanWebApp:
     """Slotplan main class, suitable as cherrypy root.
 
@@ -125,7 +135,7 @@ class SlotplanWebApp:
 
             with open("slotplan.conf", "wt", encoding = "utf8") as f:
 
-                f.write('event = ""\n')
+                f.write('event = ""\ncontact_email = ""\n')
 
             raise
             
@@ -139,9 +149,11 @@ class SlotplanWebApp:
         """Called by cherrypy for the / root page.
         """
 
-        page = simple.html.Page("slotplan - {}".format(self.config["event"]))
+        page = simple.html.Page("slotplan - {}".format(self.config["event"]), css = CSS)
 
-        page.append("<h1>Slotplan for {}</h1>".format(self.config["event"]))
+        page.append('<h1>Slotplan for {}</h1>'.format(self.config["event"]))
+
+        page.append('<p><a href="/submit">Submit your contribution here!</a></p>')
 
         return str(page)
 
@@ -205,11 +217,46 @@ class SlotplanWebApp:
 
         return
 
-    def subpage(self):
+    def submit(self,
+               first_name = None,
+               last_name = None,
+               email = None,
+               twitter_handle = None,
+               title = None,
+               abstract = None):
 
-        return '<html><head><title>Hello World Subpage</title></head><body><h1>Hello World Subpage</h1><p><a href="/">Go to main page</a></p></body></html>'
+        page = simple.html.Page("Sign Up", css = CSS)
 
-    subpage.exposed = True
+        page.append('<h1>Slotplan for {}</h1>'.format(self.config["event"]))
+        
+        page.append('<h2>Sign up</h2>')
+
+        page.append('<p><a href="/">Back to home page</a></p>')
+
+        form = simple.html.Form("/submit", "POST")
+
+        form.add_fieldset("About you")
+
+        form.add_input("Your first name:", "text", "first_name")
+        form.add_input("Your last name:", "text", "last_name")
+        form.add_input("Email address you signed up with*:", "text", "email")
+        form.add_input("Your Twitter handle (optional):", "text", "twitter_handle", value = "@")
+
+        form.add_fieldset("Contribution Title")
+        form.add_textarea("title")
+
+        form.add_fieldset("Contribution Abstract (optional)")
+        form.add_textarea("abstract")
+
+        page.append(str(form))
+
+        page.append('<p>*Your email address is required to verify that you are signed up for the event. We will never give it to anyone else.</p>')
+
+        page.append('<p>Questions? Email <a href="mailto:{0}">{0}</a></p>'.format(self.config["contact_email"]))
+
+        return str(page)
+
+    submit.exposed = True
 
 def main():
     """Main function, for IDE convenience.
