@@ -28,7 +28,6 @@ import os
 import datetime
 import simple.email
 import simple.html
-import threading
 
 VERSION = "0.1.0"
 
@@ -370,18 +369,15 @@ Thanks for considering,
 
 -- 
 Sent by slotplan v{} configured for "{}"
-""".format(first_name, last_name, twitter_handle, title, VERSION, self.config["event"])
+""".format(first_name.strip(), last_name.strip(), twitter_handle.strip(), title.strip(), VERSION, self.config["event"])
             
-            email_thread = threading.Thread(target = simple.email.send,
-                                            args = (self.config["email_sender"],
-                                                    self.config["email_recipients"],
-                                                    subject,
-                                                    body,
-                                                    self.config["email_host"],
-                                                    self.config["email_user"],
-                                                    self.config["email_password_rot13"]))
-
-            email_thread.start()
+            simple.email.send_threaded(self.config["email_sender"],
+                                       self.config["email_recipients"],
+                                       subject,
+                                       body,
+                                       self.config["email_host"],
+                                       self.config["email_user"],
+                                       self.config["email_password_rot13"])
 
             page.append('<p>Your submission has <strong>successfully been saved</strong>, you are done here. Thanks a ton!</p><p>Note: your contribution will <em>not</em> immediately be visiple in the slot plan. Please be patient.</p>')
 
