@@ -101,7 +101,7 @@ class SlotplanWebApp:
         LOGGER.debug("Attempting to read serialised data")
 
         try:
-            with open("slotplan_db.json", "rt", encoding = "utf8") as f:
+            with pathlib.Path(os.environ["PWD"], "slotplan_db.json").open("rt", encoding = "utf8") as f:
 
                 self.slotplan_db = json.loads(f.read())
 
@@ -116,7 +116,7 @@ class SlotplanWebApp:
         self.config = {"__builtins__": None}
         
         try:
-            with open("slotplan.conf", "rt", encoding = "utf8") as f:
+            with pathlib.Path(os.environ["PWD"], "slotplan.conf").open("rt", encoding = "utf8") as f:
 
                 # The threat model is that anyone who can access the
                 # config can access this source and hence execute
@@ -128,7 +128,7 @@ class SlotplanWebApp:
             
             LOGGER.error("Config file slotplan.conf not found. Creating an empty one.")
 
-            with open("slotplan.conf", "wt", encoding = "utf8") as f:
+            with pathlib.Path(os.environ["PWD"], "slotplan.conf").open("wt", encoding = "utf8") as f:
 
                 config_options = ['event = ""',
                                   'contact_email = ""',
@@ -193,7 +193,7 @@ class SlotplanWebApp:
             os.replace("slotplan_db.json",
                        "slotplan_db-{}.json".format(self.current_time_printable()))
 
-        with open("slotplan_db.json", "wt", encoding = "utf8") as f:
+        with pathlib.Path(os.environ["PWD"], "slotplan_db.json").open("wt", encoding = "utf8") as f:
 
             # Write a human-readable, diff- and version
             # control-friendly representation
@@ -208,7 +208,7 @@ class SlotplanWebApp:
         """Append a timestamp and message to logfile.
         """
 
-        with open("slotplan.log", "at", encoding = "utf8") as f:
+        with pathlib.Path(os.environ["PWD"], "slotplan.log").open("at", encoding = "utf8") as f:
 
             f.write("{} {}\n".format(self.current_time_printable(), message))
 
