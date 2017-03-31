@@ -10,3 +10,4 @@ COPYING
 simple
 *.conf
 *.bak
+*.log

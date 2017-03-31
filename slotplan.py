@@ -164,23 +164,29 @@ class SlotplanWebApp:
 
         return str(page)
 
+    def current_time_printable(self):
+        """Return a printable representation of the current time.
+        """
+
+        current_time = datetime.datetime.now()
+
+        return "{}-{}-{}-{}_{}_{}".format(current_time.year,
+                                          current_time.month,
+                                          current_time.day,
+                                          current_time.hour,
+                                          current_time.minute,
+                                          current_time.second)
+
     def write(self):
         """Serialise the database to disk.
         """
 
         if pathlib.Path("slotplan_db.json").exists():
 
-            current_time = datetime.datetime.now()
-
             # Silently replace any existing backup for this second
             #
             os.replace("slotplan_db.json",
-                       "slotplan_db-{}-{}-{}-{}_{}_{}.json".format(current_time.year,
-                                                                   current_time.month,
-                                                                   current_time.day,
-                                                                   current_time.hour,
-                                                                   current_time.minute,
-                                                                   current_time.second))
+                       "slotplan_db-{}.json".format(self.current_time_printable()))
 
         with open("slotplan_db.json", "wt", encoding = "utf8") as f:
 
@@ -190,6 +196,16 @@ class SlotplanWebApp:
             f.write(json.dumps(self.slotplan_db,
                                indent = 4,
                                sort_keys = True))
+
+        return
+
+    def write_log(self, message):
+        """Append a timestamp and message to logfile.
+        """
+
+        with open("slotplan.log", "at", encoding = "utf8") as f:
+
+            f.write("{} {}\n".format(self.current_time_printable(), message))
 
         return
 
@@ -231,6 +247,8 @@ class SlotplanWebApp:
                twitter_handle = None,
                title = None,
                abstract = None):
+        """Display the contribution submission form, or handle a submission.
+        """
 
         page = simple.html.Page("Sign Up", css = self.config["page_css"])
 
@@ -324,7 +342,9 @@ class SlotplanWebApp:
 
             self.write()
 
-            page.append('<p>Your submission has successfully been saved, you are done here. Thanks a ton!</p><p>Note: your contribution will <em>not</em> immediately be visiple in the slot plan. Please be patient.</p>')
+            self.write_log("{}    submitted contribution {}".format(email.strip(), new_contribution_id))
+
+            page.append('<p>Your submission has <strong>successfully been saved</strong>, you are done here. Thanks a ton!</p><p>Note: your contribution will <em>not</em> immediately be visiple in the slot plan. Please be patient.</p>')
 
             page.append('<p><a href="/">Back to home page</a></p>')
 
