@@ -210,7 +210,7 @@ class SlotplanWebApp:
 
         with pathlib.Path(os.environ["PWD"], "slotplan.log").open("at", encoding = "utf8") as f:
 
-            f.write("{} {}\n".format(self.current_time_printable(), message))
+            f.write("{}    {}\n".format(self.current_time_printable(), message))
 
         return
 
@@ -347,7 +347,7 @@ class SlotplanWebApp:
 
             self.write_db()
 
-            self.write_log("{}    submitted contribution {}".format(email.strip(), new_contribution_id))
+            self.write_log("{} submitted contribution {}".format(email.strip(), new_contribution_id))
 
             subject = "[slotplan] New submission by {} {}".format(first_name, last_name)
 
