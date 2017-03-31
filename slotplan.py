@@ -135,7 +135,7 @@ class SlotplanWebApp:
 
             with open("slotplan.conf", "wt", encoding = "utf8") as f:
 
-                f.write('event = ""\ncontact_email = ""\n')
+                f.write('event = ""\ncontact_email = ""\nparticipants_emails = [""]\n')
 
             raise
             
@@ -228,31 +228,96 @@ class SlotplanWebApp:
         page = simple.html.Page("Sign Up", css = CSS)
 
         page.append('<h1>Slotplan for {}</h1>'.format(self.config["event"]))
+
+        if (not first_name) and (not last_name) and (not email) and (not twitter_handle) and (not title) and (not abstract):
         
-        page.append('<h2>Sign up</h2>')
+            page.append('<h2>Sign up</h2>')
 
-        page.append('<p><a href="/">Back to home page</a></p>')
+            page.append('<p><a href="/">Back to home page</a></p>')
 
-        form = simple.html.Form("/submit", "POST")
+            form = simple.html.Form("/submit", "POST")
 
-        form.add_fieldset("About you")
+            form.add_fieldset("About you")
 
-        form.add_input("Your first name:", "text", "first_name")
-        form.add_input("Your last name:", "text", "last_name")
-        form.add_input("Email address you signed up with*:", "text", "email")
-        form.add_input("Your Twitter handle (optional):", "text", "twitter_handle", value = "@")
+            form.add_input("Your first name:", "text", "first_name")
+            form.add_input("Your last name:", "text", "last_name")
+            form.add_input("Email address you signed up with*:", "text", "email")
+            form.add_input("Your Twitter handle (optional):", "text", "twitter_handle")
 
-        form.add_fieldset("Contribution Title")
-        form.add_textarea("title")
+            form.add_fieldset("Contribution Title")
+            form.add_textarea("title")
 
-        form.add_fieldset("Contribution Abstract (optional)")
-        form.add_textarea("abstract")
+            form.add_fieldset("Contribution Abstract (optional)")
+            form.add_textarea("abstract")
 
-        page.append(str(form))
+            page.append(str(form))
 
-        page.append('<p>*Your email address is required to verify that you are signed up for the event. We will never give it to anyone else.</p>')
+            page.append('<p>*Your email address is required to verify that you are signed up for the event. We will never give it to anyone else.</p>')
 
-        page.append('<p>Questions? Email <a href="mailto:{0}">{0}</a></p>'.format(self.config["contact_email"]))
+            page.append('<p>Questions? Email <a href="mailto:{0}">{0}</a></p>'.format(self.config["contact_email"]))
+
+        elif first_name.strip() == "":
+
+            page.append('<p><strong>Please enter your first name.</strong></p><p>Use the &quot;back&quot; button of your browser to go back.</p>')
+
+        elif last_name.strip() == "":
+
+            page.append('<p><strong>Please enter your last name.</strong></p><p>Use the &quot;back&quot; button of your browser to go back.</p>')
+
+        # At least "a@b.c"
+        #
+        elif (len(email) < 5) or (email.find("@") < 1) or (email.find(".") < 1):
+
+            page.append('<p><strong>That does not look like a valid email address.</strong></p><p>Use the &quot;back&quot; button of your browser to go back.</p>')
+
+        elif email.strip().lower() not in [participant_email.lower() for participant_email in self.config["participants_emails"]]:
+
+            page.append('<p><strong>Looks like you did not sign up for the event with that email address.</strong></p><p>Use the &quot;back&quot; button of your browser to go back and enter the email address you signed up with.</p><p>Questions? Email <a href="mailto:{0}">{0}</a></p>'.format(self.config["contact_email"]))
+            
+        elif title.strip() == "":
+
+            page.append('<p><strong>Please enter the title of your contribution.</strong></p><p>Use the &quot;back&quot; button of your browser to go back.</p>')
+
+        else:
+
+            if twitter_handle.strip() and (not twitter_handle.startswith("@")):
+
+                twitter_handle = "@" + twitter_handle
+
+            # Contribution IDs are integers converted to strings,
+            # for JSON compatibility. Still, we want to find the
+            # highest ID and add 1 for the new one.
+            #
+            # To stay in line with Python's way of counting,
+            # all IDs start at "0".
+            #
+            new_contribution_id = "0"
+
+            if len(self.slotplan_db["contributions"]) > 0:
+
+                highest_id = int(new_contribution_id)
+
+                for existing_id in self.slotplan_db["contributions"].keys():
+
+                    if int(existing_id) > highest_id:
+
+                        highest_id = int(existing_id)
+
+                new_contribution_id = str(highest_id + 1)
+            
+            self.slotplan_db["contributions"][new_contribution_id] = {"first_name": first_name.strip(),
+                                                                      "last_name": last_name.strip(),
+                                                                      "email": email.strip(),
+                                                                      "twitter_handle": twitter_handle,
+                                                                      "title": title,
+                                                                      "abstract": abstract
+                                                                     }
+
+            self.write()
+
+            page.append('<p>Your submission has successfully been saved, you are done here. Thanks a ton!</p><p>Note: your contribution will <em>not</em> immediately be visiple in the slot plan. Please be patient.</p>')
+
+            page.append('<p><a href="/">Back to home page</a></p>')
 
         return str(page)
 
