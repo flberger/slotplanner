@@ -9,3 +9,4 @@ COPYING
 *.json
 simple
 *.conf
+*.bak

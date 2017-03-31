@@ -46,11 +46,6 @@ AUTORELOAD = False
 #
 simple.html.ROWS = 8
 
-CSS = """body {
-    background: rgb(250, 250, 250) ;
-    padding: 1em 12em ;
-    }
-"""
 
 class SlotplanWebApp:
     """Slotplan main class, suitable as cherrypy root.
@@ -135,7 +130,15 @@ class SlotplanWebApp:
 
             with open("slotplan.conf", "wt", encoding = "utf8") as f:
 
-                f.write('event = ""\ncontact_email = ""\nparticipants_emails = [""]\n')
+                config_options = ['event = ""',
+                                  'contact_email = ""',
+                                  'participants_emails = [""]',
+                                  "page_css = ''",
+                                  "page_header = ''",
+                                  "page_footer = ''"
+                                 ]
+
+                f.write("\n".join(config_options) + "\n")
 
             raise
             
@@ -149,11 +152,15 @@ class SlotplanWebApp:
         """Called by cherrypy for the / root page.
         """
 
-        page = simple.html.Page("slotplan - {}".format(self.config["event"]), css = CSS)
+        page = simple.html.Page("slotplan - {}".format(self.config["event"]), css = self.config["page_css"])
+
+        page.append(self.config["page_header"])
 
         page.append('<h1>Slotplan for {}</h1>'.format(self.config["event"]))
 
         page.append('<p><a href="/submit">Submit your contribution here!</a></p>')
+
+        page.append(self.config["page_footer"])
 
         return str(page)
 
@@ -225,7 +232,9 @@ class SlotplanWebApp:
                title = None,
                abstract = None):
 
-        page = simple.html.Page("Sign Up", css = CSS)
+        page = simple.html.Page("Sign Up", css = self.config["page_css"])
+
+        page.append(self.config["page_header"])
 
         page.append('<h1>Slotplan for {}</h1>'.format(self.config["event"]))
 
@@ -318,6 +327,8 @@ class SlotplanWebApp:
             page.append('<p>Your submission has successfully been saved, you are done here. Thanks a ton!</p><p>Note: your contribution will <em>not</em> immediately be visiple in the slot plan. Please be patient.</p>')
 
             page.append('<p><a href="/">Back to home page</a></p>')
+
+        page.append(self.config["page_footer"])
 
         return str(page)
 
