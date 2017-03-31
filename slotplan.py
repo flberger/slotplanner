@@ -28,6 +28,7 @@ import os
 import datetime
 import simple.email
 import simple.html
+import threading
 
 VERSION = "0.1.0"
 
@@ -135,7 +136,12 @@ class SlotplanWebApp:
                                   'participants_emails = [""]',
                                   "page_css = ''",
                                   "page_header = ''",
-                                  "page_footer = ''"
+                                  "page_footer = ''",
+                                  'email_sender = ""',
+                                  'email_recipients = [""]',
+                                  'email_host = ""',
+                                  'email_user = ""',
+                                  'email_password_rot13 = ""'
                                  ]
 
                 f.write("\n".join(config_options) + "\n")
@@ -177,7 +183,7 @@ class SlotplanWebApp:
                                           current_time.minute,
                                           current_time.second)
 
-    def write(self):
+    def write_db(self):
         """Serialise the database to disk.
         """
 
@@ -236,7 +242,7 @@ class SlotplanWebApp:
 
         self.slotplan_db["schedule"]["0"] = {"0": {"1": "123"}}
 
-        self.write()
+        self.write_db()
 
         return
 
@@ -260,7 +266,7 @@ class SlotplanWebApp:
         
             page.append('<h2>Sign up</h2>')
 
-            page.append('<p><a href="/">Back to home page</a></p>')
+            page.append('<p><a href="/">Back to slotplan home page</a></p>')
 
             form = simple.html.Form("/submit", "POST")
 
@@ -340,13 +346,46 @@ class SlotplanWebApp:
                                                                       "abstract": abstract
                                                                      }
 
-            self.write()
+            self.write_db()
 
             self.write_log("{}    submitted contribution {}".format(email.strip(), new_contribution_id))
 
+            subject = "[slotplan] New submission by {} {}".format(first_name, last_name)
+
+            body ="""Hi,
+
+a new contribution has been submitted!
+
+Name:
+{} {}
+
+Twitter handle:
+{}
+
+Title:
+{}
+
+Thanks for considering,
+            your friendly slotplan software :-)
+
+-- 
+Sent by slotplan v{} configured for "{}"
+""".format(first_name, last_name, twitter_handle, title, VERSION, self.config["event"])
+            
+            email_thread = threading.Thread(target = simple.email.send,
+                                            args = (self.config["email_sender"],
+                                                    self.config["email_recipients"],
+                                                    subject,
+                                                    body,
+                                                    self.config["email_host"],
+                                                    self.config["email_user"],
+                                                    self.config["email_password_rot13"]))
+
+            email_thread.start()
+
             page.append('<p>Your submission has <strong>successfully been saved</strong>, you are done here. Thanks a ton!</p><p>Note: your contribution will <em>not</em> immediately be visiple in the slot plan. Please be patient.</p>')
 
-            page.append('<p><a href="/">Back to home page</a></p>')
+            page.append('<p><a href="/">Back to slotplan home page</a></p>')
 
         page.append(self.config["page_footer"])
 
