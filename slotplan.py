@@ -114,9 +114,11 @@ class SlotplanWebApp:
         LOGGER.debug("Attempting to read config")
 
         self.config = {"__builtins__": None}
-        
+
+        conf_path = pathlib.Path(os.environ["PWD"], "slotplan.conf")
+            
         try:
-            with pathlib.Path(os.environ["PWD"], "slotplan.conf").open("rt", encoding = "utf8") as f:
+            with conf_path.open("rt", encoding = "utf8") as f:
 
                 # The threat model is that anyone who can access the
                 # config can access this source and hence execute
@@ -126,21 +128,21 @@ class SlotplanWebApp:
                 
         except:
             
-            LOGGER.error("Config file slotplan.conf not found. Creating an empty one.")
+            LOGGER.error("Config file slotplan.conf not found. Creating a default one at {}".format(conf_path))
 
-            with pathlib.Path(os.environ["PWD"], "slotplan.conf").open("wt", encoding = "utf8") as f:
+            with conf_path.open("wt", encoding = "utf8") as f:
 
-                config_options = ['event = ""',
-                                  'contact_email = ""',
-                                  'participants_emails = [""]',
+                config_options = ['event = "Some Event"',
+                                  'contact_email = "contact@domain"',
+                                  'participants_emails = ["participant_1@domain"]',
                                   "page_css = ''",
-                                  "page_header = ''",
-                                  "page_footer = ''",
-                                  'email_sender = ""',
-                                  'email_recipients = [""]',
-                                  'email_host = ""',
-                                  'email_user = ""',
-                                  'email_password_rot13 = ""'
+                                  "page_header = '<p>Some Event</p>'",
+                                  "page_footer = '<p>Powered by <a href=\"http://florian-berger.de/en/software/slotplan\">slotplan</a></p>'",
+                                  'email_sender = "contact@domain"',
+                                  'email_recipients = ["organiser@domain"]',
+                                  'email_host = "smtp.domain"',
+                                  'email_user = "contact@domain"',
+                                  'email_password_rot13 = "********"'
                                  ]
 
                 f.write("\n".join(config_options) + "\n")
