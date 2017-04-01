@@ -39,7 +39,7 @@ STDERR_HANDLER.setFormatter(STDERR_FORMATTER)
 LOGGER.addHandler(STDERR_HANDLER)
 
 PORT = 8311
-THREADS = 10
+THREADS = 4
 AUTORELOAD = False
 
 # Make HTML textareas more compact
