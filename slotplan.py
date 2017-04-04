@@ -188,7 +188,7 @@ class SlotplanWebApp:
         """Serialise the database to disk.
         """
 
-        if pathlib.Path("slotplan_db.json").exists():
+        if pathlib.Path(os.environ["PWD"], "slotplan_db.json").exists():
 
             # Silently replace any existing backup for this second
             #
@@ -316,8 +316,32 @@ class SlotplanWebApp:
 
             if twitter_handle.strip() and (not twitter_handle.startswith("@")):
 
-                twitter_handle = "@" + twitter_handle
+                twitter_handle = "@" + twitter_handle.strip()
 
+            contribution = {"first_name": first_name.strip(),
+                            "last_name": last_name.strip(),
+                            "email": email.strip(),
+                            "twitter_handle": twitter_handle,
+                            "title": title.strip(),
+                            "abstract": abstract.strip()
+                           }
+            
+            # Check whether this submission is JSON-serializable
+            #
+            try:
+
+                json.dumps(contribution,
+                           indent = 4,
+                           sort_keys = True)
+                
+            except:
+
+                page.append('<p><strong>Your submission contains data that I can not save.</strong></p><p>It is my fault that I can not save it, but I need your help to fix it. Sorry. Please use the &quot;back&quot; button of your browser to go back and fix the data. Try to omit the abstract if you entered one.</p><p>Questions? Email <a href="mailto:{0}">{0}</a></p>'.format(self.config["contact_email"]))
+
+                page.append(self.config["page_footer"])
+
+                return str(page)
+                
             # Contribution IDs are integers converted to strings,
             # for JSON compatibility. Still, we want to find the
             # highest ID and add 1 for the new one.
@@ -338,14 +362,8 @@ class SlotplanWebApp:
                         highest_id = int(existing_id)
 
                 new_contribution_id = str(highest_id + 1)
-            
-            self.slotplan_db["contributions"][new_contribution_id] = {"first_name": first_name.strip(),
-                                                                      "last_name": last_name.strip(),
-                                                                      "email": email.strip(),
-                                                                      "twitter_handle": twitter_handle,
-                                                                      "title": title,
-                                                                      "abstract": abstract
-                                                                     }
+
+            self.slotplan_db["contributions"][new_contribution_id] = contribution
 
             self.write_db()
 

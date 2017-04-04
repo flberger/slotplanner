@@ -11,3 +11,4 @@ simple
 *.conf
 *.bak
 *.log
+*.sh
