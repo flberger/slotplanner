@@ -192,8 +192,9 @@ class SlotplanWebApp:
 
             # Silently replace any existing backup for this second
             #
-            os.replace("slotplan_db.json",
-                       "slotplan_db-{}.json".format(self.current_time_printable()))
+            os.replace(str(pathlib.Path(os.environ["PWD"], "slotplan_db.json")),
+                       str(pathlib.Path(os.environ["PWD"],
+                                        "slotplan_db-{}.json".format(self.current_time_printable()))))
 
         with pathlib.Path(os.environ["PWD"], "slotplan_db.json").open("wt", encoding = "utf8") as f:
 
