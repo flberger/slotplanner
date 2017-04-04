@@ -28,6 +28,7 @@ import os
 import datetime
 import simple.email
 import simple.html
+import codecs
 
 VERSION = "0.1.0"
 
@@ -337,11 +338,34 @@ class SlotplanWebApp:
                 
             except:
 
-                page.append('<p><strong>Your submission contains data that I can not save.</strong></p><p>It is my fault that I can not save it, but I need your help to fix it. Sorry. Please use the &quot;back&quot; button of your browser to go back and fix the data. Try to omit the abstract if you entered one.</p><p>Questions? Email <a href="mailto:{0}">{0}</a></p>'.format(self.config["contact_email"]))
+                # Possibly an encoding problem.
+                #
+                try:
+                    if type(contribution["title"]) == bytes:
+                        
+                        contribution["title"] = codecs.decode(title.strip(),
+                                                              "utf-8",
+                                                              "replace")
 
-                page.append(self.config["page_footer"])
+                    if type(contribution["abstract"]) == bytes:
+                        
+                        contribution["abstract"] = codecs.decode(abstract.strip(),
+                                                                 "utf-8",
+                                                                 "replace")
 
-                return str(page)
+                    json.dumps(contribution,
+                               indent = 4,
+                               sort_keys = True)
+                    
+                except:
+
+                    # Giving up.
+
+                    page.append('<p><strong>Your submission contains data that I can not save.</strong></p><p>It is my fault that I can not save it, but I need your help to fix it. Sorry. Please use the &quot;back&quot; button of your browser to go back and fix the data. Try to omit the abstract if you entered one.</p><p>Questions? Email <a href="mailto:{0}">{0}</a></p>'.format(self.config["contact_email"]))
+
+                    page.append(self.config["page_footer"])
+
+                    return str(page)
                 
             # Contribution IDs are integers converted to strings,
             # for JSON compatibility. Still, we want to find the
