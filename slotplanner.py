@@ -143,7 +143,8 @@ class SlotplannerWebApp:
                                   'email_recipients = ["organiser@domain"]',
                                   'email_host = "smtp.domain"',
                                   'email_user = "contact@domain"',
-                                  'email_password_rot13 = "********"'
+                                  'email_password_rot13 = "********"',
+                                  'admin_password = "admin"'
                                  ]
 
                 f.write("\n".join(config_options) + "\n")
@@ -434,6 +435,63 @@ Sent by slotplanner v{} configured for "{}"
 
     submit.exposed = True
 
+    def admin(self, password = None):
+        """Slotplan administration interface.
+        """
+
+        page = simple.html.Page("Admin", css = self.config["page_css"])
+
+        page.append(self.config["page_header"])
+
+        page.append('<h1>Slotplan Admin Page</h1>')
+
+        page.append('<p><a href="/">Back to slotplan home page</a></p>')
+
+        # Admin passwort can not be empty
+        #
+        if (not password) or (password != self.config["admin_password"]):
+
+            form = simple.html.Form("/admin", "POST", submit_label = "Let me in!")
+
+            form.add_input("Password: ", "password", "password")
+
+            page.append(str(form))
+
+            page.append(self.config["page_footer"])
+
+            return str(page)
+
+        page.append('<h2>Submitted Contributions</h2>')
+
+        contribution_template = '<p style="line-height:130%;">{0} {1} &lt;<a href="mailto:{2}">{2}</a>&gt;, Twitter: <a href="https://twitter.com/{3}">{3}</a><br>Title: &quot;{4}&quot;<br>[ID: {5}]</p>'
+
+        contribution_ids = list(self.slotplanner_db["contributions"].keys())
+
+        contribution_ids.sort()
+
+        for contribution_id in contribution_ids:
+
+            contribution = self.slotplanner_db["contributions"][contribution_id]
+
+            page.append(contribution_template.format(contribution["first_name"],
+                                                     contribution["last_name"],
+                                                     contribution["email"],
+                                                     contribution["twitter_handle"],
+                                                     contribution["title"],
+                                                     contribution_id))
+
+            if contribution["abstract"]:
+
+                page.append('<p style="font-size:80%;">{}</p>'.format(contribution["abstract"]))
+
+            page.append('<hr>')
+
+        page.append(self.config["page_footer"])
+
+        return str(page)
+
+    admin.exposed = True
+    
 def main():
     """Main function, for IDE convenience.
     """
