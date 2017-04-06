@@ -1,10 +1,10 @@
-README for slotplan
-==================
+README for slotplanner
+======================
 
 About
 -----
 
-slotplan is a web app to manage a barcamp slot plan.
+slotplanner is a web app to manage a barcamp slot plan.
 
 
 Prerequisites
@@ -25,19 +25,19 @@ Documentation
 -------------
 
 To read the API documentation, open a shell / DOS window, navigate to the
-slotplan directory, and run
+slotplanner directory, and run
 
-    pydoc slotplan
+    pydoc slotplanner
 
 You can create a HTML version using
 
-    pydoc -w slotplan
+    pydoc -w slotplanner
 
 
 License
 -------
 
-slotplan is licensed under the GPL. See the file COPYING for details.
+slotplanner is licensed under the GPL. See the file COPYING for details.
 
 
 Author

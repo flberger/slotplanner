@@ -3,20 +3,20 @@
    Copyright (c) 2017 Florian Berger <florian.berger@posteo.de>
 """
 
-# This file is part of slotplan.
+# This file is part of slotplanner.
 #
-# slotplan is free software: you can redistribute it and/or modify
+# slotplanner is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# slotplan is distributed in the hope that it will be useful,
+# slotplanner is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with slotplan.  If not, see <http://www.gnu.org/licenses/>.
+# along with slotplanner.  If not, see <http://www.gnu.org/licenses/>.
 
 # Work started on 29. Mar 2017.
 
@@ -32,9 +32,9 @@ import codecs
 
 VERSION = "0.1.0"
 
-LOGGER = logging.getLogger("slotplan")
+LOGGER = logging.getLogger("slotplanner")
 LOGGER.setLevel(logging.DEBUG)
-STDERR_FORMATTER = logging.Formatter("slotplan [{levelname}] {funcName}(): {message} (l.{lineno})", style = "{")
+STDERR_FORMATTER = logging.Formatter("slotplanner [{levelname}] {funcName}(): {message} (l.{lineno})", style = "{")
 STDERR_HANDLER = logging.StreamHandler()
 STDERR_HANDLER.setFormatter(STDERR_FORMATTER)
 LOGGER.addHandler(STDERR_HANDLER)
@@ -48,14 +48,14 @@ AUTORELOAD = False
 simple.html.ROWS = 8
 
 
-class SlotplanWebApp:
-    """Slotplan main class, suitable as cherrypy root.
+class SlotplannerWebApp:
+    """Slotplanner main class, suitable as cherrypy root.
 
-       All data is stored in SlotplanWebApp.slotplan_db, which is
+       All data is stored in SlotplannerWebApp.slotplanner_db, which is
        a nested data structure designed for easy JSON serialisation
        an deserialisation:
 
-       slotplan_db =
+       slotplanner_db =
        {
        "contributions":
            {CONTRIBUTION_ID_STRING:
@@ -91,10 +91,10 @@ class SlotplanWebApp:
     """
 
     def __init__(self):
-        """Initialise SlotplanWebApp.
+        """Initialise SlotplannerWebApp.
         """
 
-        self.slotplan_db = {"contributions": {},
+        self.slotplanner_db = {"contributions": {},
                             "slot_dimension_names": [],
                             "schedule": {}
                            }
@@ -102,21 +102,21 @@ class SlotplanWebApp:
         LOGGER.debug("Attempting to read serialised data")
 
         try:
-            with pathlib.Path(os.environ["PWD"], "slotplan_db.json").open("rt", encoding = "utf8") as f:
+            with pathlib.Path(os.environ["PWD"], "slotplanner_db.json").open("rt", encoding = "utf8") as f:
 
-                self.slotplan_db = json.loads(f.read())
+                self.slotplanner_db = json.loads(f.read())
 
         except:
 
             LOGGER.info("Error reading database from file, starting fresh")
 
-            # Using already initialised self.slotplan_db
+            # Using already initialised self.slotplanner_db
 
         LOGGER.debug("Attempting to read config")
 
         self.config = {"__builtins__": None}
 
-        conf_path = pathlib.Path(os.environ["PWD"], "slotplan.conf")
+        conf_path = pathlib.Path(os.environ["PWD"], "slotplanner.conf")
             
         try:
             with conf_path.open("rt", encoding = "utf8") as f:
@@ -129,7 +129,7 @@ class SlotplanWebApp:
                 
         except:
             
-            LOGGER.error("Config file slotplan.conf not found. Creating a default one at {}".format(conf_path))
+            LOGGER.error("Config file slotplanner.conf not found. Creating a default one at {}".format(conf_path))
 
             with conf_path.open("wt", encoding = "utf8") as f:
 
@@ -138,7 +138,7 @@ class SlotplanWebApp:
                                   'participants_emails = ["participant_1@domain"]',
                                   "page_css = ''",
                                   "page_header = '<p>Some Event</p>'",
-                                  "page_footer = '<p>Powered by <a href=\"http://florian-berger.de/en/software/slotplan\">slotplan</a></p>'",
+                                  "page_footer = '<p>Powered by <a href=\"http://florian-berger.de/en/software/slotplanner\">slotplanner</a></p>'",
                                   'email_sender = "contact@domain"',
                                   'email_recipients = ["organiser@domain"]',
                                   'email_host = "smtp.domain"',
@@ -160,7 +160,7 @@ class SlotplanWebApp:
         """Called by cherrypy for the / root page.
         """
 
-        page = simple.html.Page("slotplan - {}".format(self.config["event"]), css = self.config["page_css"])
+        page = simple.html.Page("slotplanner - {}".format(self.config["event"]), css = self.config["page_css"])
 
         page.append(self.config["page_header"])
 
@@ -189,20 +189,20 @@ class SlotplanWebApp:
         """Serialise the database to disk.
         """
 
-        if pathlib.Path(os.environ["PWD"], "slotplan_db.json").exists():
+        if pathlib.Path(os.environ["PWD"], "slotplanner_db.json").exists():
 
             # Silently replace any existing backup for this second
             #
-            os.replace(str(pathlib.Path(os.environ["PWD"], "slotplan_db.json")),
+            os.replace(str(pathlib.Path(os.environ["PWD"], "slotplanner_db.json")),
                        str(pathlib.Path(os.environ["PWD"],
-                                        "slotplan_db-{}.json".format(self.current_time_printable()))))
+                                        "slotplanner_db-{}.json".format(self.current_time_printable()))))
 
-        with pathlib.Path(os.environ["PWD"], "slotplan_db.json").open("wt", encoding = "utf8") as f:
+        with pathlib.Path(os.environ["PWD"], "slotplanner_db.json").open("wt", encoding = "utf8") as f:
 
             # Write a human-readable, diff- and version
             # control-friendly representation
             #
-            f.write(json.dumps(self.slotplan_db,
+            f.write(json.dumps(self.slotplanner_db,
                                indent = 4,
                                sort_keys = True))
 
@@ -212,7 +212,7 @@ class SlotplanWebApp:
         """Append a timestamp and message to logfile.
         """
 
-        with pathlib.Path(os.environ["PWD"], "slotplan.log").open("at", encoding = "utf8") as f:
+        with pathlib.Path(os.environ["PWD"], "slotplanner.log").open("at", encoding = "utf8") as f:
 
             f.write("{}    {}\n".format(self.current_time_printable(), message))
 
@@ -222,16 +222,16 @@ class SlotplanWebApp:
         """Test various things, e.g. data serialisation.
         """
 
-        LOGGER.debug(self.slotplan_db)
+        LOGGER.debug(self.slotplanner_db)
 
-        LOGGER.debug("Overwriting slotplan_db with sample data")
+        LOGGER.debug("Overwriting slotplanner_db with sample data")
 
-        self.slotplan_db = {"contributions": {},
+        self.slotplanner_db = {"contributions": {},
                             "slot_dimension_names": [],
                             "schedule": {}
                            }
 
-        self.slotplan_db["contributions"]["123"] = {"first_name": "John",
+        self.slotplanner_db["contributions"]["123"] = {"first_name": "John",
                                                     "last_name": "Doe",
                                                     "title": "My Presentation",
                                                     "twitter_handle": "@invalid",
@@ -239,11 +239,11 @@ class SlotplanWebApp:
                                                     "abstract": "My presenation abstract."
                                                    }
 
-        self.slotplan_db["slot_dimension_names"].append(["Monday", "Tuesday"])
-        self.slotplan_db["slot_dimension_names"].append(["Room 1", "Room 2"])
-        self.slotplan_db["slot_dimension_names"].append(["Morning", "Afternoon"])
+        self.slotplanner_db["slot_dimension_names"].append(["Monday", "Tuesday"])
+        self.slotplanner_db["slot_dimension_names"].append(["Room 1", "Room 2"])
+        self.slotplanner_db["slot_dimension_names"].append(["Morning", "Afternoon"])
 
-        self.slotplan_db["schedule"]["0"] = {"0": {"1": "123"}}
+        self.slotplanner_db["schedule"]["0"] = {"0": {"1": "123"}}
 
         self.write_db()
 
@@ -376,11 +376,11 @@ class SlotplanWebApp:
             #
             new_contribution_id = "0"
 
-            if len(self.slotplan_db["contributions"]) > 0:
+            if len(self.slotplanner_db["contributions"]) > 0:
 
                 highest_id = int(new_contribution_id)
 
-                for existing_id in self.slotplan_db["contributions"].keys():
+                for existing_id in self.slotplanner_db["contributions"].keys():
 
                     if int(existing_id) > highest_id:
 
@@ -388,13 +388,13 @@ class SlotplanWebApp:
 
                 new_contribution_id = str(highest_id + 1)
 
-            self.slotplan_db["contributions"][new_contribution_id] = contribution
+            self.slotplanner_db["contributions"][new_contribution_id] = contribution
 
             self.write_db()
 
             self.write_log("{} submitted contribution {}".format(email.strip(), new_contribution_id))
 
-            subject = "[slotplan] New submission by {} {}".format(first_name, last_name)
+            subject = "[slotplanner] New submission by {} {}".format(first_name, last_name)
 
             body ="""Hi,
 
@@ -410,10 +410,10 @@ Title:
 {}
 
 Thanks for considering,
-            your friendly slotplan software :-)
+            your friendly slotplanner software :-)
 
 -- 
-Sent by slotplan v{} configured for "{}"
+Sent by slotplanner v{} configured for "{}"
 """.format(first_name.strip(), last_name.strip(), twitter_handle.strip(), title.strip(), VERSION, self.config["event"])
             
             simple.email.send_threaded(self.config["email_sender"],
@@ -438,7 +438,7 @@ def main():
     """Main function, for IDE convenience.
     """
 
-    root = SlotplanWebApp()
+    root = SlotplannerWebApp()
 
     config_dict = {"/" : {"tools.sessions.on" : True,
                           "tools.sessions.timeout" : 60},

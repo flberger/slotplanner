@@ -14,10 +14,10 @@ help:
 	@echo '    commit'
 
 check:
-	pylint slotplan
+	pylint slotplanner
 
 errors:
-	pylint --errors-only slotplan
+	pylint --errors-only slotplanner
 
 ifdef PYTHON
 
@@ -27,7 +27,7 @@ sdist:
 
 docs: clean
 	pydoctor --verbose \
-	         --add-package slotplan \
+	         --add-package slotplanner \
 	         --make-html \
 	         --html-output doc/
 
@@ -82,4 +82,3 @@ commit: commit.txt
 	@echo RETURN to commit using commit.txt, CTRL-C to cancel:
 	@read DUMMY
 	hg commit --logfile commit.txt && rm -v commit.txt
-

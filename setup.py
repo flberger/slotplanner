@@ -1,35 +1,35 @@
-"""slotplan Setup Script
+"""slotplanner Setup Script
 
    Copyright (c) 2017 Florian Berger <florian.berger@posteo.de>
 """
 
-# This file is part of slotplan.
+# This file is part of slotplanner.
 #
-# slotplan is free software: you can redistribute it and/or modify
+# slotplanner is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# slotplan is distributed in the hope that it will be useful,
+# slotplanner is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with slotplan.  If not, see <http://www.gnu.org/licenses/>.
+# along with slotplanner.  If not, see <http://www.gnu.org/licenses/>.
 
 # Work started on 29. Mar 2017.
 
 import os.path
-import slotplan
+import slotplanner
 
-PACKAGE = "slotplan"
+PACKAGE = "slotplanner"
 
 # Fallback
 #
 from distutils.core import setup
 
-SCRIPTS = ["slotplan.py"]
+SCRIPTS = ["slotplanner.py"]
 
 EXECUTABLES = []
 
@@ -93,10 +93,10 @@ for path in INCLUDE_FILES:
 # The syntax for the "include_files" option to "build_exe" is [(src, target), ...]
 #
 setup(name = PACKAGE,
-      version = slotplan.VERSION,
+      version = slotplanner.VERSION,
       author = "Florian Berger",
       author_email = "florian.berger@posteo.de",
-      url = "http://florian-berger.de/en/software/slotplan",
+      url = "http://florian-berger.de/en/software/slotplanner",
       description = PACKAGE + " - a web app to manage a barcamp slot plan",
       long_description = LONG_DESCRIPTION,
       license = "GPL",
