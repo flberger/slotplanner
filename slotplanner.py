@@ -167,7 +167,7 @@ class SlotplannerWebApp:
 
         page.append('<h1>Slotplan for {}</h1>'.format(self.config["event"]))
 
-        page.append('<p><a href="/submit">Submit your contribution here!</a></p>')
+        page.append('<p><a href="/submit">Submit your contribution &gt;&gt;</a></p>')
 
         page.append(self.config["page_footer"])
 
@@ -260,7 +260,7 @@ class SlotplannerWebApp:
         """Display the contribution submission form, or handle a submission.
         """
 
-        page = simple.html.Page("Sign Up", css = self.config["page_css"])
+        page = simple.html.Page("Submit a Contribution", css = self.config["page_css"])
 
         page.append(self.config["page_header"])
 
@@ -268,7 +268,7 @@ class SlotplannerWebApp:
 
         if (not first_name) and (not last_name) and (not email) and (not twitter_handle) and (not title) and (not abstract):
         
-            page.append('<h2>Sign up</h2>')
+            page.append('<h2>Submit a Contribution</h2>')
 
             page.append('<p><a href="/">Back to slotplan home page</a></p>')
 
@@ -500,7 +500,7 @@ def main():
 
     config_dict = {"/" : {"tools.sessions.on" : True,
                           "tools.sessions.timeout" : 60},
-                   "global" : {"server.socket_host" : "0.0.0.0",
+                   "global" : {"server.socket_host" : "127.0.0.1",
                                "server.socket_port" : PORT,
                                "server.thread_pool" : THREADS}}
 
