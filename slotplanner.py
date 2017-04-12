@@ -467,7 +467,7 @@ Sent by slotplanner v{} configured for "{}"
 
         contribution_ids = list(self.slotplanner_db["contributions"].keys())
 
-        contribution_ids.sort()
+        contribution_ids.sort(reverse = True)
 
         for contribution_id in contribution_ids:
 
