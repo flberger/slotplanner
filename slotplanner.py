@@ -39,8 +39,6 @@ STDERR_HANDLER = logging.StreamHandler()
 STDERR_HANDLER.setFormatter(STDERR_FORMATTER)
 LOGGER.addHandler(STDERR_HANDLER)
 
-PORT = 8311
-THREADS = 4
 AUTORELOAD = False
 
 # Make HTML textareas more compact
@@ -144,7 +142,9 @@ class SlotplannerWebApp:
                                   'email_host = "smtp.domain"',
                                   'email_user = "contact@domain"',
                                   'email_password_rot13 = "********"',
-                                  'admin_password = "admin"'
+                                  'admin_password = "admin"',
+                                  'server_port = 8311',
+                                  'server_threads = 4'
                                  ]
 
                 f.write("\n".join(config_options) + "\n")
@@ -520,8 +520,8 @@ def main():
     config_dict = {"/" : {"tools.sessions.on" : True,
                           "tools.sessions.timeout" : 60},
                    "global" : {"server.socket_host" : "127.0.0.1",
-                               "server.socket_port" : PORT,
-                               "server.thread_pool" : THREADS}}
+                               "server.socket_port" : root.config["server_port"],
+                               "server.thread_pool" : root.config["server_threads"]}}
 
     # Conditionally turn off Autoreloader
     #
