@@ -465,7 +465,14 @@ Sent by slotplanner v{} configured for "{}"
 
         contribution_ids = list(self.slotplanner_db["contributions"].keys())
 
+        # IDs are string-representations of integers, but need
+        # to be sorted as the latter
+        #
+        contribution_ids = [int(id_str) for id_str in contribution_ids]
+        
         contribution_ids.sort(reverse = True)
+
+        contribution_ids = [str(id_int) for id_int in contribution_ids]
 
         # Table of contents
         #
