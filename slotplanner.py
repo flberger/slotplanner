@@ -461,13 +461,32 @@ Sent by slotplanner v{} configured for "{}"
 
             return str(page)
 
-        page.append('<h2>Submitted Contributions</h2>')
-
-        contribution_template = '<p style="line-height:130%;">{0} {1} &lt;<a href="mailto:{2}">{2}</a>&gt;, Twitter: <a href="https://twitter.com/{3}">{3}</a><br>Title: &quot;{4}&quot;<br>[ID: {5}]</p>'
+        page.append('<h2><a name="toc"></a>Submitted Contributions</h2>')
 
         contribution_ids = list(self.slotplanner_db["contributions"].keys())
 
         contribution_ids.sort(reverse = True)
+
+        # Table of contents
+        #
+        page.append('<ul>')
+
+        toc_template = '<li style="line-height:150%;"><a href="#{0}">[{0}] {1} {2}: <em>{3}</em></a></li>'
+        
+        for contribution_id in contribution_ids:
+
+            contribution = self.slotplanner_db["contributions"][contribution_id]
+
+            page.append(toc_template.format(contribution_id,
+                                            contribution["first_name"],
+                                            contribution["last_name"],
+                                            contribution["title"]))
+            
+        page.append('</ul>')
+
+        # Actual contributions list
+        #
+        contribution_template = '<p style="line-height:130%;"><a name="{5}"></a>{0} {1} &lt;<a href="mailto:{2}">{2}</a>&gt;, Twitter: <a href="https://twitter.com/{3}">{3}</a><br>Title: &quot;{4}&quot;<br>[ID: {5}]</p>'
 
         for contribution_id in contribution_ids:
 
@@ -484,7 +503,7 @@ Sent by slotplanner v{} configured for "{}"
 
                 page.append('<p style="font-size:80%;">{}</p>'.format(contribution["abstract"]))
 
-            page.append('<hr>')
+            page.append('<p><a href="#toc">&uarr; Up to table of contents</a></p><hr>')
 
         page.append(self.config["page_footer"])
 
