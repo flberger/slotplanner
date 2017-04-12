@@ -270,7 +270,7 @@ class SlotplannerWebApp:
         
             page.append('<h2>Submit a Contribution</h2>')
 
-            page.append('<p><a href="/">Back to slotplan home page</a></p>')
+            page.append('<p><a href="/">&lt;&lt; Back to slotplan home page</a></p>')
 
             form = simple.html.Form("/submit", "POST")
 
@@ -305,11 +305,11 @@ class SlotplannerWebApp:
         #
         elif (len(email) < 5) or (email.find("@") < 1) or (email.find(".") < 1):
 
-            page.append('<p><strong>That does not look like a valid email address.</strong></p><p>Use the &quot;back&quot; button of your browser to go back.</p>')
+            page.append('<p><strong>I am sorry, but that does not look like a valid email address.</strong></p><p>Use the &quot;back&quot; button of your browser to go back.</p>')
 
         elif email.strip().lower() not in [participant_email.lower() for participant_email in self.config["participants_emails"]]:
 
-            page.append('<p><strong>Looks like you did not sign up for the event with that email address.</strong></p><p>Use the &quot;back&quot; button of your browser to go back and enter the email address you signed up with.</p><p>Questions? Email <a href="mailto:{0}">{0}</a></p>'.format(self.config["contact_email"]))
+            page.append('<p><strong>I am sorry, but i looks like you did not sign up for the event with that email address.</strong></p><p>Use the &quot;back&quot; button of your browser to go back and enter the email address you signed up with.</p><p>Questions? Email <a href="mailto:{0}">{0}</a></p>'.format(self.config["contact_email"]))
             
         elif title.strip() == "":
 
@@ -427,7 +427,7 @@ Sent by slotplanner v{} configured for "{}"
 
             page.append('<p>Your submission has <strong>successfully been saved</strong>, you are done here. Thanks a ton!</p><p>Note: your contribution will <em>not</em> immediately be visiple in the slot plan. Please be patient.</p>')
 
-            page.append('<p><a href="/">Back to slotplan home page</a></p>')
+            page.append('<p><a href="/">&lt;&lt; Back to slotplan home page</a></p>')
 
         page.append(self.config["page_footer"])
 
@@ -445,7 +445,7 @@ Sent by slotplanner v{} configured for "{}"
 
         page.append('<h1>Slotplan Admin Page</h1>')
 
-        page.append('<p><a href="/">Back to slotplan home page</a></p>')
+        page.append('<p><a href="/">&lt;&lt; Back to slotplan home page</a></p>')
 
         # Admin passwort can not be empty
         #
