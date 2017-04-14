@@ -29,6 +29,8 @@ import datetime
 import simple.email
 import simple.html
 import codecs
+import threading
+from hashlib import sha256
 
 VERSION = "0.1.0"
 
@@ -41,10 +43,34 @@ LOGGER.addHandler(STDERR_HANDLER)
 
 AUTORELOAD = False
 
+WRITE_LOCK = threading.Lock()
+
 # Make HTML textareas more compact
 #
 simple.html.ROWS = 8
 
+
+def logged_in(f):
+    """A decorator to check for valid login before displaying a page.
+    """
+
+    def run_with_login_check(*args):
+
+        if not cherrypy.session.get("logged_in"):
+
+            page = simple.html.Page("Access restricted", css = args[0].config["page_css"])
+
+            page.append(args[0].config["page_header"])
+
+            page.append('<p>Please <a href="/login">log in</a> to access this page.</p>')
+
+            page.append(args[0].config["page_footer"])
+
+            return str(page)
+
+        return f(*args)
+
+    return run_with_login_check
 
 class SlotplannerWebApp:
     """Slotplanner main class, suitable as cherrypy root.
@@ -129,25 +155,27 @@ class SlotplannerWebApp:
             
             LOGGER.error("Config file slotplanner.conf not found. Creating a default one at {}".format(conf_path))
 
-            with conf_path.open("wt", encoding = "utf8") as f:
+            with WRITE_LOCK:
 
-                config_options = ['event = "Some Event"',
-                                  'contact_email = "contact@domain"',
-                                  'participants_emails = ["participant_1@domain"]',
-                                  "page_css = ''",
-                                  "page_header = '<p>Some Event</p>'",
-                                  "page_footer = '<p>Powered by <a href=\"http://florian-berger.de/en/software/slotplanner\">slotplanner</a></p>'",
-                                  'email_sender = "contact@domain"',
-                                  'email_recipients = ["organiser@domain"]',
-                                  'email_host = "smtp.domain"',
-                                  'email_user = "contact@domain"',
-                                  'email_password_rot13 = "********"',
-                                  'admin_password = "admin"',
-                                  'server_port = 8311',
-                                  'server_threads = 4'
-                                 ]
+                with conf_path.open("wt", encoding = "utf8") as f:
 
-                f.write("\n".join(config_options) + "\n")
+                    config_options = ['event = "Some Event"',
+                                      'contact_email = "contact@domain"',
+                                      'participants_emails = ["participant_1@domain"]',
+                                      "page_css = ''",
+                                      "page_header = '<p>Some Event</p>'",
+                                      "page_footer = '<p>Powered by <a href=\"http://florian-berger.de/en/software/slotplanner\">slotplanner</a></p>'",
+                                      'email_sender = "contact@domain"',
+                                      'email_recipients = ["organiser@domain"]',
+                                      'email_host = "smtp.domain"',
+                                      'email_user = "contact@domain"',
+                                      'email_password_rot13 = "********"',
+                                      'admin_password = "admin"',
+                                      'server_port = 8311',
+                                      'server_threads = 4'
+                                     ]
+
+                    f.write("\n".join(config_options) + "\n")
 
             raise
             
@@ -198,14 +226,16 @@ class SlotplannerWebApp:
                        str(pathlib.Path(os.environ["PWD"],
                                         "slotplanner_db-{}.json".format(self.current_time_printable()))))
 
-        with pathlib.Path(os.environ["PWD"], "slotplanner_db.json").open("wt", encoding = "utf8") as f:
+        with WRITE_LOCK:
 
-            # Write a human-readable, diff- and version
-            # control-friendly representation
-            #
-            f.write(json.dumps(self.slotplanner_db,
-                               indent = 4,
-                               sort_keys = True))
+            with pathlib.Path(os.environ["PWD"], "slotplanner_db.json").open("wt", encoding = "utf8") as f:
+
+                # Write a human-readable, diff- and version
+                # control-friendly representation
+                #
+                f.write(json.dumps(self.slotplanner_db,
+                                   indent = 4,
+                                   sort_keys = True))
 
         return
 
@@ -213,9 +243,11 @@ class SlotplannerWebApp:
         """Append a timestamp and message to logfile.
         """
 
-        with pathlib.Path(os.environ["PWD"], "slotplanner.log").open("at", encoding = "utf8") as f:
+        with WRITE_LOCK:
 
-            f.write("{}    {}\n".format(self.current_time_printable(), message))
+            with pathlib.Path(os.environ["PWD"], "slotplanner.log").open("at", encoding = "utf8") as f:
+
+                f.write("{}    {}\n".format(self.current_time_printable(), message))
 
         return
 
@@ -435,6 +467,41 @@ Sent by slotplanner v{} configured for "{}"
 
     submit.exposed = True
 
+    def login(self, password = None):
+        """If called without arguments, return a login form.
+           If called with arguments, try to log in.
+        """
+
+        page = simple.html.Page("Log in", css = self.config["page_css"])
+
+        page.append(self.config["page_header"])
+
+        page.append('<h1>Log In</h1>')
+
+        # Password can not be empty
+        #
+        if (not password) or (password != self.config["admin_password"]):
+
+            form = simple.html.Form("/login", "POST", submit_label = "Let me in!")
+
+            form.add_input("Password: ", "password", "password")
+
+            page.append(str(form))
+
+        else:
+            cherrypy.session["logged_in"] = True
+
+            page.append('<p>You are now logged in.</p>')
+
+            page.append('<p><a href="/admin">Go to admin page &gt;&gt;</a></p>')
+
+        page.append(self.config["page_footer"])
+
+        return str(page)
+
+    login.exposed = True
+
+    @logged_in
     def admin(self, password = None):
         """Slotplan administration interface.
         """
@@ -447,19 +514,7 @@ Sent by slotplanner v{} configured for "{}"
 
         page.append('<p><a href="/">&lt;&lt; Back to slotplan home page</a></p>')
 
-        # Admin passwort can not be empty
-        #
-        if (not password) or (password != self.config["admin_password"]):
-
-            form = simple.html.Form("/admin", "POST", submit_label = "Let me in!")
-
-            form.add_input("Password: ", "password", "password")
-
-            page.append(str(form))
-
-            page.append(self.config["page_footer"])
-
-            return str(page)
+        page.append('<p><a href="/logout">Log out &gt;&gt;</a></p>')
 
         page.append('<h2><a name="toc"></a>Submitted Contributions</h2>')
 
@@ -518,6 +573,28 @@ Sent by slotplanner v{} configured for "{}"
 
     admin.exposed = True
     
+    def logout(self):
+        """Expire the current Cherrypy session for this user.
+        """
+
+        if cherrypy.session.get("logged_in"):
+
+            cherrypy.lib.sessions.expire()
+
+        page = simple.html.Page("Access restricted", css = self.config["page_css"])
+
+        page.append(self.config["page_header"])
+
+        page.append('<p>You are logged out.</p>')
+
+        page.append('<p><a href="/">&lt;&lt; Back to slotplan home page</a></p>')
+
+        page.append(self.config["page_footer"])
+
+        return str(page)
+
+    logout.exposed = True
+
 def main():
     """Main function, for IDE convenience.
     """
