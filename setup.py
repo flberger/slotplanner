@@ -50,7 +50,51 @@ except ImportError:
 #
 INCLUDE_FILES = []
 
-LONG_DESCRIPTION = ""
+LONG_DESCRIPTION = """
+About
+-----
+
+slotplanner is a web app to manage a barcamp slot plan.
+
+It serves a similar purpose to `Pentabarf <http://www.pentabarf.org/>`__
+or `frab <https://frab.github.io/frab/>`__ , but is much more
+lightweight and easier to set up and administrate. It is aimed at
+BarCamps with a comparatively small amount of contributions, i.e. some
+dozens.
+
+Prerequisites
+-------------
+
+Python https://www.python.org/
+
+CherryPy https://cherrypy.org/
+
+Documentation
+-------------
+
+To read the API documentation, open a shell / DOS window, navigate to
+the slotplanner directory, and run
+
+::
+
+    pydoc slotplanner
+
+You can create a HTML version using
+
+::
+
+    pydoc -w slotplanner
+
+License
+-------
+
+slotplanner is licensed under the GPL. See the file COPYING for details.
+
+Author
+------
+
+Florian Berger
+"""
 
 # Python 2.x doesn't honour the 'package_dir' and 'package_data' arguments to
 # setup() when building an 'sdist'. Generate MANIFEST.in containing the

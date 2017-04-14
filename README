@@ -6,19 +6,18 @@ About
 
 slotplanner is a web app to manage a barcamp slot plan.
 
+It serves a similar purpose to [Pentabarf](http://www.pentabarf.org/)
+or [frab](https://frab.github.io/frab/) , but is much more lightweight
+and easier to set up and administrate. It is aimed at BarCamps with
+a comparatively small amount of contributions, i.e. some dozens.
+
 
 Prerequisites
 -------------
 
-Python    http://www.python.org
+Python      https://www.python.org/
 
-
-Installation
-------------
-
-Unzip the file, then at the command line run
-
-    python setup.py install
+CherryPy    https://cherrypy.org/
 
 
 Documentation
