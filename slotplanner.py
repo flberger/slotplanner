@@ -45,6 +45,8 @@ AUTORELOAD = False
 
 WRITE_LOCK = threading.Lock()
 
+LEVEL_1_ELEMENTS = 3
+
 # Make HTML textareas more compact
 #
 simple.html.ROWS = 8
@@ -54,7 +56,7 @@ def logged_in(f):
     """A decorator to check for valid login before displaying a page.
     """
 
-    def run_with_login_check(*args):
+    def run_with_login_check(*args, **kwargs):
 
         if not cherrypy.session.get("logged_in"):
 
@@ -68,7 +70,7 @@ def logged_in(f):
 
             return str(page)
 
-        return f(*args)
+        return f(*args, **kwargs)
 
     return run_with_login_check
 
@@ -588,6 +590,139 @@ Sent by slotplanner v{} configured for "{}"
         return str(page)
 
     admin.exposed = True
+
+    @logged_in
+    def slots(self, **kwargs):
+        """Display a form to enter slot dimensions, or process a slot dimension edit.
+        """
+        
+        page = simple.html.Page("Edit Slot Dimensions", css = self.config["page_css"])
+
+        page.append(self.config["page_header"])
+
+        page.append('<h1>Edit Slot Dimensions</h1>')
+
+        page.append('<p>Here you can enter up to {} level-1 elements, along with their sublevels.</p>'.format(LEVEL_1_ELEMENTS))
+
+        page.append('''<p>That sounds abtract because it tries to be open to a lot of applications.
+                       Typical levels would be <em>Wednesday</em>, <em>Thursday</em> for level 1,
+                       <em>Room A</em>, <em>Room B</em> for level 2
+                       and <em>10:00</em>, <em>11:00</em>, <em>14:00</em> for level 3.</p>''')
+
+        page.append('<p>If you need more than {} elements in level 1, you will have to edit the JSON file directly.</p>'.format(LEVEL_1_ELEMENTS))
+
+        page.append('<p><strong>Warning:</strong> What ever you submit <strong>will replace all existing slot dimensions and their labels</strong>.</p>')
+
+        if len(kwargs):
+
+            slot_dimension_names = []
+
+            # Only change anything existing when there is at least
+            # an element_1
+            #
+            if "element_1" in kwargs.keys() and kwargs["element_1"].strip():
+
+                level_1 = [kwargs["element_1"]]
+
+                # Omit first element
+                #
+                for i in range(1, LEVEL_1_ELEMENTS + 1)[1:]:
+
+                    # TODO: This will append the 3rd element as 2nd if the 2nd is omitted
+                    #
+                    if "element_{}".format(i) in kwargs.keys() and kwargs["element_{}".format(i)].strip():
+
+                        level_1.append(kwargs["element_{}".format(i)].strip())
+
+                # Get the respective next levels from the actual
+                # length of the submitted levels, not by parsing the
+                # names of the arguments
+
+                level_2 = []
+
+                for i in range(1, len(level_1) + 1):
+
+                    next_level = []
+
+                    if ("element_{}_dimension_2".format(i) in kwargs.keys()
+                        and kwargs["element_{}_dimension_2".format(i)].strip()
+                        and kwargs["element_{}_dimension_2".format(i)].strip() != "Enter level 2 elements here, one per line"):
+
+                        # Expecting a newline-separated list
+
+                        next_level = kwargs["element_{}_dimension_2".format(i)].strip().split("\n")
+
+                        next_level = [s.strip() for s in next_level]
+
+                    level_2.append(next_level)
+
+                level_3 = []
+
+                for i in range(len(level_2)):
+
+                    next_level = []
+
+                    if ("element_{}_dimension_3".format(i + 1) in kwargs.keys()
+                        and kwargs["element_{}_dimension_3".format(i + 1)].strip()
+                        and kwargs["element_{}_dimension_3".format(i + 1)].strip() != "Enter level 3 elements here, one per line"):
+
+                        # Expecting a newline-separated list
+
+                        next_level = kwargs["element_{}_dimension_3".format(i + 1)].strip().split("\n")
+
+                        next_level = [s.strip() for s in next_level]
+
+                    # Assuming equal level 3 levels for all level 2 elements
+                    #
+                    for j in range(len(level_2[i])):
+                        
+                        level_3.append(next_level)
+
+                # Concatenate everything collected so far
+                #
+                slot_dimension_names.append(level_1)
+
+                for l in level_2:
+
+                    slot_dimension_names.append(l)
+
+                for l in level_3:
+
+                    slot_dimension_names.append(l)
+
+                # Now store everything in the database and sync to file
+                #
+                self.slotplanner_db["slot_dimension_names"] = slot_dimension_names
+
+                self.write_db()
+
+                self.write_log("Slot dimension names have been updated.")
+
+        # TODO: Use defaults from slotplanner_db
+        #
+        form = simple.html.Form("/slots", "POST", submit_label = "Submit and replace existing")
+
+        for i in range(1, LEVEL_1_ELEMENTS + 1):
+
+            form.add_fieldset("Level 1 Element {}".format(i))
+
+            form.add_input("Level 1 Element {} name: ".format(i),
+                           "text",
+                           "element_{}".format(i))
+
+            form.add_textarea("element_{}_dimension_2".format(i),
+                              content = "Enter level 2 elements here, one per line")
+
+            form.add_textarea("element_{}_dimension_3".format(i),
+                              content = "Enter level 3 elements here, one per line")
+
+        page.append(str(form))
+
+        page.append(self.config["page_footer"])
+
+        return str(page)
+
+    slots.exposed = True
 
     @logged_in
     def schedule(self):
