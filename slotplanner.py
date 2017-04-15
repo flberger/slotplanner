@@ -605,14 +605,20 @@ Sent by slotplanner v{} configured for "{}"
         page.append('<p>Here you can enter up to {} level-1 elements, along with their sublevels.</p>'.format(LEVEL_1_ELEMENTS))
 
         page.append('''<p>That sounds abtract because it tries to be open to a lot of applications.
-                       Typical levels would be <em>Wednesday</em>, <em>Thursday</em> for level 1,
-                       <em>Room A</em>, <em>Room B</em> for level 2
-                       and <em>10:00</em>, <em>11:00</em>, <em>14:00</em> for level 3.</p>''')
+                       Typical levels would be</p>
+                       <ul>
+                       <li><em>Wednesday</em>, <em>Thursday</em> for level 1,</li>
+                       <li><em>Room A</em>, <em>Room B</em> for level 2</li>
+                       <li>and <em>10:00</em>, <em>11:00</em>, <em>14:00</em> for level 3.</li>
+                       </ul>''')
 
         page.append('<p>If you need more than {} elements in level 1, you will have to edit the JSON file directly.</p>'.format(LEVEL_1_ELEMENTS))
 
         page.append('<p><strong>Warning:</strong> What ever you submit <strong>will replace all existing slot dimensions and their labels</strong>.</p>')
 
+        # When called with arguments, expect a slot dimension names
+        # update, read input and save it.
+        #
         if len(kwargs):
 
             slot_dimension_names = []
@@ -652,29 +658,29 @@ Sent by slotplanner v{} configured for "{}"
 
                         next_level = kwargs["element_{}_dimension_2".format(i)].strip().split("\n")
 
-                        next_level = [s.strip() for s in next_level]
+                        next_level = [s.strip() for s in next_level if s.strip()]
 
                     level_2.append(next_level)
 
                 level_3 = []
 
-                for i in range(len(level_2)):
+                for i in range(1, len(level_2) + 1):
 
                     next_level = []
 
-                    if ("element_{}_dimension_3".format(i + 1) in kwargs.keys()
-                        and kwargs["element_{}_dimension_3".format(i + 1)].strip()
-                        and kwargs["element_{}_dimension_3".format(i + 1)].strip() != "Enter level 3 elements here, one per line"):
+                    if ("element_{}_dimension_3".format(i) in kwargs.keys()
+                        and kwargs["element_{}_dimension_3".format(i)].strip()
+                        and kwargs["element_{}_dimension_3".format(i)].strip() != "Enter level 3 elements here, one per line"):
 
                         # Expecting a newline-separated list
 
-                        next_level = kwargs["element_{}_dimension_3".format(i + 1)].strip().split("\n")
+                        next_level = kwargs["element_{}_dimension_3".format(i)].strip().split("\n")
 
-                        next_level = [s.strip() for s in next_level]
+                        next_level = [s.strip() for s in next_level if s.strip()]
 
                     # Assuming equal level 3 levels for all level 2 elements
                     #
-                    for j in range(len(level_2[i])):
+                    for j in range(len(level_2[i - 1])):
                         
                         level_3.append(next_level)
 
@@ -698,23 +704,54 @@ Sent by slotplanner v{} configured for "{}"
 
                 self.write_log("Slot dimension names have been updated.")
 
-        # TODO: Use defaults from slotplanner_db
-        #
         form = simple.html.Form("/slots", "POST", submit_label = "Submit and replace existing")
 
+        # Display slot dimension names form, displaying present
+        # level lables if available.
+        #
         for i in range(1, LEVEL_1_ELEMENTS + 1):
 
             form.add_fieldset("Level 1 Element {}".format(i))
 
+            default_level_1 = ""
+            default_level_2 = "Enter level 2 elements here, one per line"
+            default_level_3 = "Enter level 3 elements here, one per line"
+            
+            if (len(self.slotplanner_db["slot_dimension_names"][0])
+                and i <= len(self.slotplanner_db["slot_dimension_names"][0])):
+
+                default_level_1 = self.slotplanner_db["slot_dimension_names"][0][i - 1]
+
+                if (1 + i <= len(self.slotplanner_db["slot_dimension_names"])
+                    and len(self.slotplanner_db["slot_dimension_names"][0 + i])):
+
+                    default_level_2 = "\n".join(self.slotplanner_db["slot_dimension_names"][0 + i])
+
+                    # NOTE: Using the first available list on level 3 for all level 3 lists. In theory, they all could be different.
+                    #
+                    index_level_3 = 1 + len(self.slotplanner_db["slot_dimension_names"][0])
+
+                    if i > 1:
+
+                        for l in self.slotplanner_db["slot_dimension_names"][1:i]:
+
+                            index_level_3 += len(l)
+
+                    if (index_level_3 <= len(self.slotplanner_db["slot_dimension_names"])
+                        and len(self.slotplanner_db["slot_dimension_names"][index_level_3])):
+
+                        default_level_3 = "\n".join(self.slotplanner_db["slot_dimension_names"][index_level_3])
+
             form.add_input("Level 1 Element {} name: ".format(i),
                            "text",
-                           "element_{}".format(i))
+                           "element_{}".format(i),
+                           value = default_level_1)
 
             form.add_textarea("element_{}_dimension_2".format(i),
-                              content = "Enter level 2 elements here, one per line")
+                              content = default_level_2)
 
             form.add_textarea("element_{}_dimension_3".format(i),
-                              content = "Enter level 3 elements here, one per line")
+                              content = default_level_3)
 
         page.append(str(form))
 
