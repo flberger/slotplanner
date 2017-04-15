@@ -93,30 +93,40 @@ class SlotplannerWebApp:
             ...
            },
        "slot_dimension_names":
-           [
-               [FIRST_1, FIRST_2],
-               [SECOND_1, SECOND_2],
-               ...
-           ],
+           {"FIRST_1":
+               {"SECOND_1":
+                   ["THIRD_1", "THIRD_2", ...],
+                "SECOND_2":
+                   ["THIRD_3", "THIRD_4", ...],
+                 ...},
+            "FIRST_2":
+               {"SECOND_1":
+                   ["THIRD_1", "THIRD_2", ...],
+                "SECOND_3":
+                   ["THIRD_1", "THIRD_2", ...],
+                ...},
+            ...
+           },
        "schedule":
            {INDEX_FIRST_1_AS_STRING:
-               {INDEX_SECOND_1_AS_STRING: CONTRIBUTION_ID_STRING,
-                INDEX_SECOND_2_AS_STRING: CONTRIBUTION_ID_STRING,
-                ...
-               },
-            INDEX_FIRST_2_AS_STRING:
-               {INDEX_SECOND_1_AS_STRING: CONTRIBUTION_ID_STRING,
-                INDEX_SECOND_2_AS_STRING: CONTRIBUTION_ID_STRING,
+               {INDEX_SECOND_1_AS_STRING:
+                   {INDEX_THIRD_1_AS_STRING: CONTRIBUTION_ID_STRING},
+                   ...,
                 ...
                },
             ...
            }
        }
 
-       where FIRST_1, ... could be days and SECOND_1, ... rooms.
+       where FIRST_1, ... could be days, SECOND_1, ... rooms and
+       THIRD_1, ... times.
 
        The goal is to be able to construct a human-readable slotplan
        from this data structure.
+
+       Note that slot_dimension_names may not be sorted, but indexes
+       used in schedule always refer to slot_dimension_names sorted
+       in ascending order.
     """
 
     def __init__(self):
@@ -265,7 +275,7 @@ class SlotplannerWebApp:
         LOGGER.debug("Overwriting slotplanner_db with sample data")
 
         self.slotplanner_db = {"contributions": {},
-                            "slot_dimension_names": [],
+                            "slot_dimension_names": {},
                             "schedule": {}
                            }
 
@@ -277,10 +287,11 @@ class SlotplannerWebApp:
                                                     "abstract": "My presenation abstract."
                                                    }
 
-        self.slotplanner_db["slot_dimension_names"].append(["Monday", "Tuesday"])
-        self.slotplanner_db["slot_dimension_names"].append(["Room 1", "Room 2"])
-        self.slotplanner_db["slot_dimension_names"].append(["Morning", "Afternoon"])
-
+        self.slotplanner_db["slot_dimension_names"] = {"Monday": {"Room 1": ["Morning", "Afternoon"],
+                                                                  "Room 2": ["Morning", "Afternoon"]},
+                                                       "Tuesday": {"Room 1": ["Morning", "Afternoon"],
+                                                                  "Room 2": ["Morning", "Afternoon"]}}
+        
         self.slotplanner_db["schedule"]["0"] = {"0": {"1": "123"}}
 
         self.write_db()
