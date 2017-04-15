@@ -112,6 +112,11 @@ class SlotplannerWebApp:
             ...
            }
        }
+
+       where FIRST_1, ... could be days and SECOND_1, ... rooms.
+
+       The goal is to be able to construct a human-readable slotplan
+       from this data structure.
     """
 
     def __init__(self):
@@ -572,7 +577,71 @@ Sent by slotplanner v{} configured for "{}"
         return str(page)
 
     admin.exposed = True
-    
+
+    @logged_in
+    def schedule(self):
+        """Display a form to schedule contributions, or process a scheduling request.
+        """
+
+        page = simple.html.Page("Schedule Contributions", css = self.config["page_css"])
+
+        page.append(self.config["page_header"])
+
+        page.append('<h1>Schedule Contributions</h1>')
+
+        if not len(self.slotplanner_db["slot_dimension_names"]):
+
+            page.append('<p><strong>No slot dimensions have been configured.</strong> To schedule contributions, please <a href="/slots">configure slot dimensions</a>.</p>')
+
+            page.append(self.config["page_footer"])
+
+            return str(page)
+
+        form = simple.html.Form("/schedule", "POST")
+
+        form.add_fieldset("Schedule a contribution")
+
+        # TODO: Duplicated from admin()
+        #
+        contribution_ids = list(self.slotplanner_db["contributions"].keys())
+
+        # IDs are string-representations of integers, but need
+        # to be sorted as the latter
+        #
+        contribution_ids = [int(id_str) for id_str in contribution_ids]
+        
+        contribution_ids.sort()
+
+        contribution_ids = [str(id_int) for id_int in contribution_ids]
+
+        template = '<li style="line-height:150%;">[{0}] {1} {2}: {3}</li>'
+
+        contributions = [template.format(contribution_id,
+                                         self.slotplanner_db["contributions"][contribution_id]["first_name"],
+                                         self.slotplanner_db["contributions"][contribution_id]["last_name"],
+                                         self.slotplanner_db["contributions"][contribution_id]["title"])
+                         for contribution_id in contribution_ids]
+
+        form.add_drop_down_list("Contribution: ",
+                                "contribution",
+                                contributions)
+
+        form.add_drop_down_list("Slot: ",
+                                "slot",
+                                self.slotplanner_db["slot_dimension_names"][1])
+        
+        form.add_drop_down_list("Time: ",
+                                "time",
+                                self.slotplanner_db["slot_dimension_names"][2])
+        
+        page.append(str(form))
+            
+        page.append(self.config["page_footer"])
+
+        return str(page)
+
+    schedule.exposed = True
+
     def logout(self):
         """Expire the current Cherrypy session for this user.
         """
