@@ -130,9 +130,9 @@ class SlotplannerWebApp:
         """
 
         self.slotplanner_db = {"contributions": {},
-                            "slot_dimension_names": [],
-                            "schedule": {}
-                           }
+                               "slot_dimension_names": [],
+                               "schedule": {}
+                              }
 
         LOGGER.debug("Attempting to read serialised data")
 
@@ -271,7 +271,7 @@ class SlotplannerWebApp:
         LOGGER.debug("Overwriting slotplanner_db with sample data")
 
         self.slotplanner_db = {"contributions": {},
-                               "slot_dimension_names": {},
+                               "slot_dimension_names": [],
                                "schedule": {}
                               }
 
