@@ -93,20 +93,16 @@ class SlotplannerWebApp:
             ...
            },
        "slot_dimension_names":
-           {"FIRST_1":
-               {"SECOND_1":
-                   ["THIRD_1", "THIRD_2", ...],
-                "SECOND_2":
-                   ["THIRD_3", "THIRD_4", ...],
-                 ...},
-            "FIRST_2":
-               {"SECOND_1":
-                   ["THIRD_1", "THIRD_2", ...],
-                "SECOND_3":
-                   ["THIRD_1", "THIRD_2", ...],
-                ...},
-            ...
-           },
+           [
+               ["FIRST_1", "FIRST_2", ...],
+               ["FIRST_1_SECOND_1", "FIRST_1_SECOND_2", ...],
+               ["FIRST_2_SECOND_1", "FIRST_2_SECOND_3", ...],
+               ["FIRST_1_SECOND_1_THIRD_1", "FIRST_1_SECOND_1_THIRD_2", ...],
+               ["FIRST_1_SECOND_2_THIRD_3", "FIRST_1_SECOND_2_THIRD_4", ...],
+               ["FIRST_2_SECOND_1_THIRD_1", "FIRST_2_SECOND_1_THIRD_2", ...],
+               ["FIRST_2_SECOND_3_THIRD_1", "FIRST_2_SECOND_3_THIRD_2", ...],
+               ...
+           ],
        "schedule":
            {INDEX_FIRST_1_AS_STRING:
                {INDEX_SECOND_1_AS_STRING:
@@ -275,9 +271,9 @@ class SlotplannerWebApp:
         LOGGER.debug("Overwriting slotplanner_db with sample data")
 
         self.slotplanner_db = {"contributions": {},
-                            "slot_dimension_names": {},
-                            "schedule": {}
-                           }
+                               "slot_dimension_names": {},
+                               "schedule": {}
+                              }
 
         self.slotplanner_db["contributions"]["123"] = {"first_name": "John",
                                                     "last_name": "Doe",
@@ -287,10 +283,14 @@ class SlotplannerWebApp:
                                                     "abstract": "My presenation abstract."
                                                    }
 
-        self.slotplanner_db["slot_dimension_names"] = {"Monday": {"Room 1": ["Morning", "Afternoon"],
-                                                                  "Room 2": ["Morning", "Afternoon"]},
-                                                       "Tuesday": {"Room 1": ["Morning", "Afternoon"],
-                                                                  "Room 2": ["Morning", "Afternoon"]}}
+        self.slotplanner_db["slot_dimension_names"] = [["Monday", "Tuesday"],
+                                                       ["Room 1", "Room 2"],
+                                                       ["Room 1", "Room 2"],
+                                                       ["Morning", "Afternoon"],
+                                                       ["Morning", "Afternoon"],
+                                                       ["Morning", "Afternoon"],
+                                                       ["Morning", "Afternoon"]
+                                                      ]
         
         self.slotplanner_db["schedule"]["0"] = {"0": {"1": "123"}}
 
