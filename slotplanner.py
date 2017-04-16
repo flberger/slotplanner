@@ -678,7 +678,7 @@ Sent by slotplanner v{} configured for "{}"
 
                         next_level = [s.strip() for s in next_level if s.strip()]
 
-                    # Assuming equal level 3 levels for all level 2 elements
+                    # NOTE: Assuming equal level 3 levels for all level 2 elements
                     #
                     for j in range(len(level_2[i - 1])):
                         
@@ -762,13 +762,16 @@ Sent by slotplanner v{} configured for "{}"
     slots.exposed = True
 
     @logged_in
-    def schedule(self):
+    def schedule(self, **kwargs):
         """Display a form to schedule contributions, or process a scheduling request.
         """
 
         page = simple.html.Page("Schedule Contributions", css = self.config["page_css"])
 
         page.append(self.config["page_header"])
+
+        #REMOVE
+        page.append('<pre>{}</pre>'.format(str(kwargs).replace(", ", ",\n")))
 
         page.append('<h1>Schedule Contributions</h1>')
 
@@ -780,10 +783,29 @@ Sent by slotplanner v{} configured for "{}"
 
             return str(page)
 
-        form = simple.html.Form("/schedule", "POST")
+        if ("contribution" in kwargs.keys()
+            and "level_1" in kwargs.keys()
+            and "level_2" in kwargs.keys()
+            and "level_3" in kwargs.keys()):
 
-        form.add_fieldset("Schedule a contribution")
+            # !!!
+            # "schedule":
+            #     {INDEX_FIRST_1_AS_STRING:
+            #         {INDEX_SECOND_1_AS_STRING:
+            #             {INDEX_THIRD_1_AS_STRING: CONTRIBUTION_ID_STRING},
+            #             ...,
+            #          ...
+            #         },
+            #      ...
+            #     }
 
+            page.append('<p>Thanks for submitting!</p>')
+
+        # Display forms to schedule a contribution
+
+        page.append('<p>Note: scheduling a contribution will <strong>silently replace</strong> any contribution already scheduled for the slot.</p>')
+
+        # TODO: Only display contributions that are not yet scheduled
         # TODO: Duplicated from admin()
         #
         contribution_ids = list(self.slotplanner_db["contributions"].keys())
@@ -805,19 +827,40 @@ Sent by slotplanner v{} configured for "{}"
                                          self.slotplanner_db["contributions"][contribution_id]["title"])
                          for contribution_id in contribution_ids]
 
-        form.add_drop_down_list("Contribution: ",
-                                "contribution",
-                                contributions)
+        for i in range(len(self.slotplanner_db["slot_dimension_names"][0])):
+        
+            form = simple.html.Form("/schedule",
+                                    "POST",
+                                    submit_label = "Schedule and replace for {}".format(self.slotplanner_db["slot_dimension_names"][0][i]))
 
-        form.add_drop_down_list("Slot: ",
-                                "slot",
-                                self.slotplanner_db["slot_dimension_names"][1])
-        
-        form.add_drop_down_list("Time: ",
-                                "time",
-                                self.slotplanner_db["slot_dimension_names"][2])
-        
-        page.append(str(form))
+            form.add_fieldset(self.slotplanner_db["slot_dimension_names"][0][i])
+
+            form.add_hidden("level_1", str(i))
+
+            form.add_drop_down_list("",
+                                    "contribution",
+                                    contributions)
+
+            form.add_drop_down_list("",
+                                    "level_2",
+                                    self.slotplanner_db["slot_dimension_names"][i + 1])
+
+            # TODO: Copied from slots()
+            # TODO: Using the first available list on level 3 for all level 3 lists. They all could be different, so the correct ones should be displayed.
+            #
+            index_level_3 = 1 + len(self.slotplanner_db["slot_dimension_names"][0])
+
+            if i > 0:
+
+                for l in self.slotplanner_db["slot_dimension_names"][1:i + 1]:
+
+                    index_level_3 += len(l)
+
+            form.add_drop_down_list("",
+                                    "level_3",
+                                    self.slotplanner_db["slot_dimension_names"][index_level_3])
+
+            page.append(str(form))
             
         page.append(self.config["page_footer"])
 
