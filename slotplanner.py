@@ -734,9 +734,6 @@ Sent by slotplanner v{} configured for "{}"
 
         page.append(self.config["page_header"])
 
-        #REMOVE
-        page.append('<pre>{}</pre>'.format(str(kwargs).replace(", ", ",\n")))
-
         page.append('<h1>Schedule Contributions</h1>')
 
         if not len(self.slotplanner_db["slot_dimension_names"]):
@@ -747,23 +744,52 @@ Sent by slotplanner v{} configured for "{}"
 
             return str(page)
 
+        # It would be much more elegant to handle all list element
+        # references by index. But it is tricky to build an HTML form
+        # that displays the verbose label, but submits an index.
+
         if ("contribution" in kwargs.keys()
             and "level_1" in kwargs.keys()
             and "level_2" in kwargs.keys()
             and "level_3" in kwargs.keys()):
+            
+            contribution_id = kwargs["contribution"].strip("[").split("]")[0]
+            index_level_1 = int(kwargs["level_1"])
+            len_level_1 = len(self.slotplanner_db["slot_dimension_names"][0])
 
-            # !!!
-            # "schedule":
-            #     {INDEX_FIRST_1_AS_STRING:
-            #         {INDEX_SECOND_1_AS_STRING:
-            #             {INDEX_THIRD_1_AS_STRING: CONTRIBUTION_ID_STRING},
-            #             ...,
-            #          ...
-            #         },
-            #      ...
-            #     }
+            if (contribution_id in self.slotplanner_db["contributions"].keys()
+                and index_level_1 <= len_level_1
+                and 1 + index_level_1 <= len(self.slotplanner_db["slot_dimension_names"])
+                and 1 + len_level_1 + index_level_1 <= len(self.slotplanner_db["slot_dimension_names"])
+                and kwargs["level_2"] in self.slotplanner_db["slot_dimension_names"][1 + index_level_1]
+                and kwargs["level_3"] in self.slotplanner_db["slot_dimension_names"][1 + len_level_1 + index_level_1]):
 
-            page.append('<p>Thanks for submitting!</p>')
+                index_level_2 = str(self.slotplanner_db["slot_dimension_names"][1 + index_level_1].index(kwargs["level_2"]))
+                index_level_3 = str(self.slotplanner_db["slot_dimension_names"][1 + len_level_1 + index_level_1].index(kwargs["level_3"]))
+
+                # For JSON compatibility, keys are handled as strings.
+                #
+                index_level_1 = str(index_level_1)
+
+                try:
+                    self.slotplanner_db["schedule"][index_level_1][index_level_2][index_level_3] = contribution_id
+
+                except KeyError:
+
+                    try:
+                        self.slotplanner_db["schedule"][index_level_1][index_level_2] = {index_level_3: contribution_id}
+
+                    except KeyError:
+
+                        self.slotplanner_db["schedule"][index_level_1] = {index_level_2: {index_level_3: contribution_id}}
+
+                # Now sync to file
+                #
+                self.write_db()
+
+                self.write_log("Contribution {} has been scheduled.".format(contribution_id))
+
+                page.append('<p>Contribution {} has been scheduled. Thanks for submitting!</p>'.format(contribution_id))
 
         # Display forms to schedule a contribution
 
@@ -783,7 +809,7 @@ Sent by slotplanner v{} configured for "{}"
 
         contribution_ids = [str(id_int) for id_int in contribution_ids]
 
-        template = '<li style="line-height:150%;">[{0}] {1} {2}: {3}</li>'
+        template = '[{0}] {1} {2}: {3}'
 
         contributions = [template.format(contribution_id,
                                          self.slotplanner_db["contributions"][contribution_id]["first_name"],
@@ -800,6 +826,10 @@ Sent by slotplanner v{} configured for "{}"
             form.add_fieldset(self.slotplanner_db["slot_dimension_names"][0][i])
 
             form.add_hidden("level_1", str(i))
+
+            # It would be much more elegant to handle all list element
+            # references by index. But it is tricky to build an HTML form
+            # that displays the verbose label, but submits an index.
 
             form.add_drop_down_list("",
                                     "contribution",
