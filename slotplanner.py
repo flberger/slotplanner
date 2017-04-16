@@ -795,11 +795,32 @@ Sent by slotplanner v{} configured for "{}"
 
         page.append('<p>Note: scheduling a contribution will <strong>silently replace</strong> any contribution already scheduled for the slot.</p>')
 
-        # TODO: Only display contributions that are not yet scheduled
+        # Only display contributions that are not yet scheduled
+        #
+        scheduled_contributions = []
+
+        if len(self.slotplanner_db["schedule"]):
+
+            for level_2_items in self.slotplanner_db["schedule"].values():
+
+                for level_3_items in level_2_items.values():
+
+                    for identifier in level_3_items.values():
+
+                        scheduled_contributions.append(identifier)
+        
+        contribution_ids = [identifier for identifier in self.slotplanner_db["contributions"].keys() if identifier not in scheduled_contributions]
+
+        if not len(contribution_ids):
+        
+            page.append('<p><strong>There are no unscheduled contributions left.</strong></p>')
+
+            page.append(self.config["page_footer"])
+
+            return str(page)
+        
         # TODO: Duplicated from admin()
         #
-        contribution_ids = list(self.slotplanner_db["contributions"].keys())
-
         # IDs are string-representations of integers, but need
         # to be sorted as the latter
         #
