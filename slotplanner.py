@@ -30,7 +30,7 @@ import simple.email
 import simple.html
 import codecs
 import threading
-from hashlib import sha256
+#from hashlib import sha256
 
 VERSION = "0.1.0"
 
@@ -98,11 +98,9 @@ class SlotplannerWebApp:
            [
                ["FIRST_1", "FIRST_2", ...],
                ["FIRST_1_SECOND_1", "FIRST_1_SECOND_2", ...],
-               ["FIRST_2_SECOND_1", "FIRST_2_SECOND_3", ...],
-               ["FIRST_1_SECOND_1_THIRD_1", "FIRST_1_SECOND_1_THIRD_2", ...],
-               ["FIRST_1_SECOND_2_THIRD_3", "FIRST_1_SECOND_2_THIRD_4", ...],
-               ["FIRST_2_SECOND_1_THIRD_1", "FIRST_2_SECOND_1_THIRD_2", ...],
-               ["FIRST_2_SECOND_3_THIRD_1", "FIRST_2_SECOND_3_THIRD_2", ...],
+               ["FIRST_2_SECOND_1", "FIRST_2_SECOND_2", ...],
+               ["FIRST_1_THIRD_1", "FIRST_1_THIRD_2", ...],
+               ["FIRST_2_THIRD_1", "FIRST_2_THIRD_2", ...],
                ...
            ],
        "schedule":
@@ -290,8 +288,6 @@ class SlotplannerWebApp:
                                                        ["Room 1", "Room 2"],
                                                        ["Morning", "Afternoon"],
                                                        ["Morning", "Afternoon"],
-                                                       ["Morning", "Afternoon"],
-                                                       ["Morning", "Afternoon"]
                                                       ]
         
         self.slotplanner_db["schedule"]["0"] = {"0": {"1": "123"}}
@@ -628,11 +624,9 @@ Sent by slotplanner v{} configured for "{}"
             #
             if "element_1" in kwargs.keys() and kwargs["element_1"].strip():
 
-                level_1 = [kwargs["element_1"]]
-
-                # Omit first element
-                #
-                for i in range(1, LEVEL_1_ELEMENTS + 1)[1:]:
+                level_1 = []
+                
+                for i in range(1, LEVEL_1_ELEMENTS + 1):
 
                     # TODO: This will append the 3rd element as 2nd if the 2nd is omitted
                     #
@@ -640,59 +634,39 @@ Sent by slotplanner v{} configured for "{}"
 
                         level_1.append(kwargs["element_{}".format(i)].strip())
 
-                # Get the respective next levels from the actual
-                # length of the submitted levels, not by parsing the
-                # names of the arguments
+                levels_2_3 = []
 
-                level_2 = []
-
-                for i in range(1, len(level_1) + 1):
-
-                    next_level = []
-
-                    if ("element_{}_dimension_2".format(i) in kwargs.keys()
-                        and kwargs["element_{}_dimension_2".format(i)].strip()
-                        and kwargs["element_{}_dimension_2".format(i)].strip() != "Enter level 2 elements here, one per line"):
-
-                        # Expecting a newline-separated list
-
-                        next_level = kwargs["element_{}_dimension_2".format(i)].strip().split("\n")
-
-                        next_level = [s.strip() for s in next_level if s.strip()]
-
-                    level_2.append(next_level)
-
-                level_3 = []
-
-                for i in range(1, len(level_2) + 1):
-
-                    next_level = []
-
-                    if ("element_{}_dimension_3".format(i) in kwargs.keys()
-                        and kwargs["element_{}_dimension_3".format(i)].strip()
-                        and kwargs["element_{}_dimension_3".format(i)].strip() != "Enter level 3 elements here, one per line"):
-
-                        # Expecting a newline-separated list
-
-                        next_level = kwargs["element_{}_dimension_3".format(i)].strip().split("\n")
-
-                        next_level = [s.strip() for s in next_level if s.strip()]
-
-                    # NOTE: Assuming equal level 3 levels for all level 2 elements
+                for i in range(2, LEVEL_1_ELEMENTS + 1):
+                
+                    # Get the respective next levels from the actual
+                    # length of the submitted levels, not by parsing the
+                    # names of the arguments.
                     #
-                    for j in range(len(level_2[i - 1])):
-                        
-                        level_3.append(next_level)
+                    # Each level 1 has an independent level 2 and level 3
+                    # subdivision. But the level 3 subdivision is the same
+                    # for all level 2 elements of a level 1 element.
+                    #
+                    for j in range(1, len(level_1) + 1):
+
+                        next_level = []
+
+                        if ("element_{}_dimension_{}".format(j, i) in kwargs.keys()
+                            and kwargs["element_{}_dimension_{}".format(j, i)].strip()
+                            and kwargs["element_{}_dimension_{}".format(j, i)].strip() != "Enter level {} elements here, one per line".format(i)):
+
+                            # Expecting a newline-separated list
+
+                            next_level = kwargs["element_{}_dimension_{}".format(j, i)].strip().split("\n")
+
+                            next_level = [s.strip() for s in next_level if s.strip()]
+
+                        levels_2_3.append(next_level)
 
                 # Concatenate everything collected so far
                 #
                 slot_dimension_names.append(level_1)
 
-                for l in level_2:
-
-                    slot_dimension_names.append(l)
-
-                for l in level_3:
+                for l in levels_2_3:
 
                     slot_dimension_names.append(l)
 
@@ -727,20 +701,10 @@ Sent by slotplanner v{} configured for "{}"
 
                     default_level_2 = "\n".join(self.slotplanner_db["slot_dimension_names"][0 + i])
 
-                    # NOTE: Using the first available list on level 3 for all level 3 lists. In theory, they all could be different.
-                    #
-                    index_level_3 = 1 + len(self.slotplanner_db["slot_dimension_names"][0])
+                    if (1 + len(self.slotplanner_db["slot_dimension_names"][0]) + i <= len(self.slotplanner_db["slot_dimension_names"])
+                        and len(self.slotplanner_db["slot_dimension_names"][0 + len(self.slotplanner_db["slot_dimension_names"][0]) + i])):
 
-                    if i > 1:
-
-                        for l in self.slotplanner_db["slot_dimension_names"][1:i]:
-
-                            index_level_3 += len(l)
-
-                    if (index_level_3 <= len(self.slotplanner_db["slot_dimension_names"])
-                        and len(self.slotplanner_db["slot_dimension_names"][index_level_3])):
-
-                        default_level_3 = "\n".join(self.slotplanner_db["slot_dimension_names"][index_level_3])
+                        default_level_3 = "\n".join(self.slotplanner_db["slot_dimension_names"][0 + len(self.slotplanner_db["slot_dimension_names"][0]) + i])
 
             form.add_input("Level 1 Element {} name: ".format(i),
                            "text",
@@ -845,20 +809,9 @@ Sent by slotplanner v{} configured for "{}"
                                     "level_2",
                                     self.slotplanner_db["slot_dimension_names"][i + 1])
 
-            # TODO: Copied from slots()
-            # TODO: Using the first available list on level 3 for all level 3 lists. They all could be different, so the correct ones should be displayed.
-            #
-            index_level_3 = 1 + len(self.slotplanner_db["slot_dimension_names"][0])
-
-            if i > 0:
-
-                for l in self.slotplanner_db["slot_dimension_names"][1:i + 1]:
-
-                    index_level_3 += len(l)
-
             form.add_drop_down_list("",
                                     "level_3",
-                                    self.slotplanner_db["slot_dimension_names"][index_level_3])
+                                    self.slotplanner_db["slot_dimension_names"][i + 1 + len(self.slotplanner_db["slot_dimension_names"][0])])
 
             page.append(str(form))
             
