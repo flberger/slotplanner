@@ -51,6 +51,74 @@ LEVEL_1_ELEMENTS = 3
 #
 simple.html.ROWS = 8
 
+CSS = """div.slotplan_table {
+    border-bottom: solid 1px black ;
+    }
+
+div.slotplan_row_odd {
+    background: rgb(223, 223, 223) ;
+    }
+
+div.slotplan_header, div.slotplan_index, div.slotplan_cell {
+    padding: 0.3em 0px ;
+    }
+
+div.slotplan_header {
+    font-weight: bold ;
+    border-bottom: solid 1px black ;
+    }
+
+div.clear {
+    clear: both ;
+    }
+
+/* Default width: desktop screen */
+@media only screen and (min-width: 1025px)
+{
+    div.slotplan_table {
+        border-top: solid 1px black ;
+        }
+
+    div.slotplan_header, div.slotplan_index, div.slotplan_cell {
+        float: left ;
+        width: 11.6em ;
+        }
+
+    span.slotplan_hint {
+        display: none ;
+        }
+}
+
+/* A little smaller: tablets, small laptops etc. */
+@media only screen and (min-width: 481px) and (max-width: 1024px)
+{
+    div.slotplan_table {
+        border-top: solid 1px black ;
+        }
+
+    div.slotplan_header, div.slotplan_index, div.slotplan_cell {
+        float: left ;
+        width: 6em ;
+        }
+
+    span.slotplan_hint {
+        display: none ;
+        }
+}
+
+/* Very small: mobile phones etc. */
+@media only screen and (max-width: 480px)
+{
+    div.slotplan_header {
+        display: none ;
+        }
+
+    div.slotplan_index {
+        border: solid 1px black ;
+        font-weight: bold ;
+        }
+}
+"""
 
 def logged_in(f):
     """A decorator to check for valid login before displaying a page.
@@ -197,16 +265,83 @@ class SlotplannerWebApp:
         return
 
     def __call__(self):
-        """Called by cherrypy for the / root page.
+        """Display the root page with the current slotplan.
         """
 
-        page = simple.html.Page("slotplanner - {}".format(self.config["event"]), css = self.config["page_css"])
+        page = simple.html.Page("slotplanner - {}".format(self.config["event"]), css = self.config["page_css"] + CSS)
 
         page.append(self.config["page_header"])
 
         page.append('<h1>Slotplan for {}</h1>'.format(self.config["event"]))
 
         page.append('<p><a href="/submit">Submit your contribution &gt;&gt;</a></p>')
+
+        if not (len(self.slotplanner_db["schedule"])
+                and len(self.slotplanner_db["contributions"])
+                and len(self.slotplanner_db["slot_dimension_names"])):
+
+            page.append('<p><strong>Currently there is no slotplan to display.</strong></p>')
+
+            page.append(self.config["page_footer"])
+
+            return str(page)
+
+        for level_1_index in range(len(self.slotplanner_db["slot_dimension_names"][0])):
+
+            page.append('<h2>{}</h2>'.format(self.slotplanner_db["slot_dimension_names"][0][level_1_index]))
+
+            page.append('<div class="slotplan_table">')
+
+            page.append('<div class="slotplan_row_even">')
+
+            page.append('<div class="slotplan_header">&nbsp;</div>')
+                
+            for level_2 in self.slotplanner_db["slot_dimension_names"][1 + level_1_index]:
+
+                page.append('<div class="slotplan_header">{}</div>'.format(level_2))
+            
+            # Close row
+            #
+            page.append('<div class="clear"></div></div>')
+
+            level_3_list = self.slotplanner_db["slot_dimension_names"][1 + len(self.slotplanner_db["slot_dimension_names"][0]) + level_1_index]
+
+            for level_3_index in range(len(level_3_list)):
+
+                page.append('<div class="slotplan_row_{}">'.format({0: "even", 1: "odd"}[level_3_index % 2]))
+                
+                page.append('<div class="slotplan_index">{}</div>'.format(level_3_list[level_3_index]))
+
+                for level_2_index in range(len(self.slotplanner_db["slot_dimension_names"][1 + level_1_index])):
+
+                    contribution_listing = ""
+
+                    try:
+
+                        contribution_id = self.slotplanner_db["schedule"][str(level_1_index)][str(level_2_index)][str(level_3_index)]
+
+                        contribution = self.slotplanner_db["contributions"][contribution_id]
+
+                        contribution_listing = '{} {}: <em>{}</em>'.format(contribution["first_name"],
+                                                                           contribution["last_name"],
+                                                                           contribution["title"])
+
+                    except KeyError:
+
+                        contribution_listing = "&mdash;"
+
+                    template = '<div class="slotplan_cell"><span class="slotplan_hint">[{}]</span> {}</div>'
+
+                    page.append(template.format(self.slotplanner_db["slot_dimension_names"][1 + level_1_index][level_2_index],
+                                                contribution_listing))
+                
+                # Close row
+                #
+                page.append('<div class="clear"></div></div>')
+
+            # Close table
+            #
+            page.append('</div>')
 
         page.append(self.config["page_footer"])
 
