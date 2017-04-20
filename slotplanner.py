@@ -276,73 +276,8 @@ class SlotplannerWebApp:
 
         page.append('<p><a href="/submit">Submit your contribution &gt;&gt;</a></p>')
 
-        if not (len(self.slotplanner_db["schedule"])
-                and len(self.slotplanner_db["contributions"])
-                and len(self.slotplanner_db["slot_dimension_names"])):
-
-            page.append('<p><strong>Currently there is no slotplan to display.</strong></p>')
-
-            page.append(self.config["page_footer"])
-
-            return str(page)
-
-        for level_1_index in range(len(self.slotplanner_db["slot_dimension_names"][0])):
-
-            page.append('<h2>{}</h2>'.format(self.slotplanner_db["slot_dimension_names"][0][level_1_index]))
-
-            page.append('<div class="slotplan_table">')
-
-            page.append('<div class="slotplan_row_even">')
-
-            page.append('<div class="slotplan_header">&nbsp;</div>')
-                
-            for level_2 in self.slotplanner_db["slot_dimension_names"][1 + level_1_index]:
-
-                page.append('<div class="slotplan_header">{}</div>'.format(level_2))
+        page.append(self.render_slotplan())
             
-            # Close row
-            #
-            page.append('<div class="clear"></div></div>')
-
-            level_3_list = self.slotplanner_db["slot_dimension_names"][1 + len(self.slotplanner_db["slot_dimension_names"][0]) + level_1_index]
-
-            for level_3_index in range(len(level_3_list)):
-
-                page.append('<div class="slotplan_row_{}">'.format({0: "even", 1: "odd"}[level_3_index % 2]))
-                
-                page.append('<div class="slotplan_index">{}</div>'.format(level_3_list[level_3_index]))
-
-                for level_2_index in range(len(self.slotplanner_db["slot_dimension_names"][1 + level_1_index])):
-
-                    contribution_listing = ""
-
-                    try:
-
-                        contribution_id = self.slotplanner_db["schedule"][str(level_1_index)][str(level_2_index)][str(level_3_index)]
-
-                        contribution = self.slotplanner_db["contributions"][contribution_id]
-
-                        contribution_listing = '{} {}: <em>{}</em>'.format(contribution["first_name"],
-                                                                           contribution["last_name"],
-                                                                           contribution["title"])
-
-                    except KeyError:
-
-                        contribution_listing = "&mdash;"
-
-                    template = '<div class="slotplan_cell"><span class="slotplan_hint">[{}]</span> {}</div>'
-
-                    page.append(template.format(self.slotplanner_db["slot_dimension_names"][1 + level_1_index][level_2_index],
-                                                contribution_listing))
-                
-                # Close row
-                #
-                page.append('<div class="clear"></div></div>')
-
-            # Close table
-            #
-            page.append('</div>')
-
         page.append(self.config["page_footer"])
 
         return str(page)
@@ -430,6 +365,79 @@ class SlotplannerWebApp:
         self.write_db()
 
         return
+
+    def render_slotplan(self):
+        """Return the current slotplan as an HTML string.
+        """
+
+        return_str = ""
+
+        if not (len(self.slotplanner_db["schedule"])
+                and len(self.slotplanner_db["contributions"])
+                and len(self.slotplanner_db["slot_dimension_names"])):
+
+            return_str += '<p><strong>Currently there is no slotplan to display.</strong></p>'
+
+            return return_str
+
+        for level_1_index in range(len(self.slotplanner_db["slot_dimension_names"][0])):
+
+            return_str += '<h2>{}</h2>'.format(self.slotplanner_db["slot_dimension_names"][0][level_1_index])
+
+            return_str += '<div class="slotplan_table">'
+
+            return_str += '<div class="slotplan_row_even">'
+
+            return_str += '<div class="slotplan_header">&nbsp;</div>'
+                
+            for level_2 in self.slotplanner_db["slot_dimension_names"][1 + level_1_index]:
+
+                return_str += '<div class="slotplan_header">{}</div>'.format(level_2)
+            
+            # Close row
+            #
+            return_str += '<div class="clear"></div></div>'
+
+            level_3_list = self.slotplanner_db["slot_dimension_names"][1 + len(self.slotplanner_db["slot_dimension_names"][0]) + level_1_index]
+
+            for level_3_index in range(len(level_3_list)):
+
+                return_str += '<div class="slotplan_row_{}">'.format({0: "even", 1: "odd"}[level_3_index % 2])
+                
+                return_str += '<div class="slotplan_index">{}</div>'.format(level_3_list[level_3_index])
+
+                for level_2_index in range(len(self.slotplanner_db["slot_dimension_names"][1 + level_1_index])):
+
+                    contribution_listing = ""
+
+                    try:
+
+                        contribution_id = self.slotplanner_db["schedule"][str(level_1_index)][str(level_2_index)][str(level_3_index)]
+
+                        contribution = self.slotplanner_db["contributions"][contribution_id]
+
+                        contribution_listing = '{} {}: <em>{}</em>'.format(contribution["first_name"],
+                                                                           contribution["last_name"],
+                                                                           contribution["title"])
+
+                    except KeyError:
+
+                        contribution_listing = "&mdash;"
+
+                    template = '<div class="slotplan_cell"><span class="slotplan_hint">[{}]</span> {}</div>'
+
+                    return_str += template.format(self.slotplanner_db["slot_dimension_names"][1 + level_1_index][level_2_index],
+                                                  contribution_listing)
+                
+                # Close row
+                #
+                return_str += '<div class="clear"></div></div>'
+
+            # Close table
+            #
+            return_str += '</div>'
+        
+        return return_str 
 
     def submit(self,
                first_name = None,
