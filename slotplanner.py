@@ -51,7 +51,7 @@ LEVEL_1_ELEMENTS = 3
 #
 simple.html.ROWS = 8
 
-CSS = """div.slotplan_table {
+SLOTPLAN_TABLE_CSS = """div.slotplan_table {
     border-bottom: solid 1px black ;
     }
 
@@ -268,7 +268,7 @@ class SlotplannerWebApp:
         """Display the root page with the current slotplan.
         """
 
-        page = simple.html.Page("slotplanner - {}".format(self.config["event"]), css = self.config["page_css"] + CSS)
+        page = simple.html.Page("slotplanner - {}".format(self.config["event"]), css = self.config["page_css"] + SLOTPLAN_TABLE_CSS)
 
         page.append(self.config["page_header"])
 
@@ -366,8 +366,10 @@ class SlotplannerWebApp:
 
         return
 
-    def render_slotplan(self):
+    def render_slotplan(self, swap = False):
         """Return the current slotplan as an HTML string.
+
+           If 'swap' is True, render a form to swap contributions.
         """
 
         return_str = ""
@@ -383,6 +385,10 @@ class SlotplannerWebApp:
         for level_1_index in range(len(self.slotplanner_db["slot_dimension_names"][0])):
 
             return_str += '<h2>{}</h2>'.format(self.slotplanner_db["slot_dimension_names"][0][level_1_index])
+
+            if swap:
+
+                return_str += '<form action="/swap" method="POST">'
 
             return_str += '<div class="slotplan_table">'
 
@@ -416,15 +422,21 @@ class SlotplannerWebApp:
 
                         contribution = self.slotplanner_db["contributions"][contribution_id]
 
-                        contribution_listing = '{} {}: <em>{}</em>'.format(contribution["first_name"],
-                                                                           contribution["last_name"],
-                                                                           contribution["title"])
+                        listing_template = '{} {}: <em>{}</em>'
+
+                        if swap:
+                            listing_template = '<input type="checkbox" name="swap" value="{}"> ' + listing_template
+
+                        contribution_listing = listing_template.format(contribution_id,
+                                                                       contribution["first_name"],
+                                                                       contribution["last_name"],
+                                                                       contribution["title"])
 
                     except KeyError:
 
                         contribution_listing = "&mdash;"
 
-                    template = '<div class="slotplan_cell"><span class="slotplan_hint">[{}]</span> {}</div>'
+                    template = '<div class="slotplan_cell"><span class="slotplan_hint">[{}] </span>{}</div>'
 
                     return_str += template.format(self.slotplanner_db["slot_dimension_names"][1 + level_1_index][level_2_index],
                                                   contribution_listing)
@@ -436,8 +448,60 @@ class SlotplannerWebApp:
             # Close table
             #
             return_str += '</div>'
+
+            if(swap):
+
+                return_str += '<input type="submit" value="Swap contributions"></form>'
         
-        return return_str 
+        return return_str
+
+    def render_kwargs(self, kwargs):
+        """Return an HTML representation of the kwargs.
+        """
+
+        return_string = '<p><pre>{}</pre></p>'.format(str(kwargs).replace(", ", ",\n"))
+
+        return return_string
+
+    def scheduled_contributions(self):
+        """Return a list of contribution identifiers of already scheduled contributions.
+        """
+       
+        scheduled_contributions = []
+
+        if len(self.slotplanner_db["schedule"]):
+
+            for level_2_items in self.slotplanner_db["schedule"].values():
+
+                for level_3_items in level_2_items.values():
+
+                    # TODO: This blindly assumes level 3 is the final level.
+                    #
+                    for identifier in level_3_items.values():
+
+                        scheduled_contributions.append(identifier)
+        
+        return scheduled_contributions
+
+    def replace_scheduled_contribution(self, old_id, new_id):
+        """Replace contribution with old_id by the contribution with the new_id in the schedule.
+        """
+
+        if len(self.slotplanner_db["schedule"]):
+
+            for level_2_items in self.slotplanner_db["schedule"].values():
+
+                for level_3_items in level_2_items.values():
+
+                    # TODO: This blindly assumes level 3 is the final level.
+                    #
+                    for level_3_key in level_3_items.keys():
+
+                        if level_3_items[level_3_key] == old_id:
+
+                            level_3_items[level_3_key] = new_id
+
+        return
 
     def submit(self,
                first_name = None,
@@ -940,19 +1004,7 @@ Sent by slotplanner v{} configured for "{}"
 
         # Only display contributions that are not yet scheduled
         #
-        scheduled_contributions = []
-
-        if len(self.slotplanner_db["schedule"]):
-
-            for level_2_items in self.slotplanner_db["schedule"].values():
-
-                for level_3_items in level_2_items.values():
-
-                    for identifier in level_3_items.values():
-
-                        scheduled_contributions.append(identifier)
-        
-        contribution_ids = [identifier for identifier in self.slotplanner_db["contributions"].keys() if identifier not in scheduled_contributions]
+        contribution_ids = [identifier for identifier in self.slotplanner_db["contributions"].keys() if identifier not in self.scheduled_contributions()]
 
         if not len(contribution_ids):
         
@@ -1014,6 +1066,58 @@ Sent by slotplanner v{} configured for "{}"
         return str(page)
 
     schedule.exposed = True
+
+    @logged_in
+    def swap(self, swap = None):
+        """Display a slotplan table with the option to swap elements, or process a swap.
+        """
+
+        page = simple.html.Page("Swap Contributions", css = self.config["page_css"] + SLOTPLAN_TABLE_CSS)
+
+        page.append(self.config["page_header"])
+
+        page.append('<h1>Swap Contributions</h1>')
+
+        if swap is not None:
+
+            if not type(swap) == list:
+
+                page.append('<p><strong>Please select two contributions to swap.</strong></p>')
+
+            elif len(swap) > 2:
+
+                page.append('<p>{} contributions selected. <strong>Please select no more than two contributions to swap.</strong></p>'.format(len(swap)))
+
+            elif not (swap[0] in self.scheduled_contributions()
+                      and swap[1] in self.scheduled_contributions()):
+
+                page.append('<p><strong>I could not find all contributions to swap in the schedule.</strong></p>')
+
+            else:
+
+                # NOTE: We need to make sure at no point the same contribution is scheduled twice.
+                #
+                self.replace_scheduled_contribution(swap[0], "REPLACEMENT_MARK")
+
+                self.replace_scheduled_contribution(swap[1], swap[0])
+
+                self.replace_scheduled_contribution("REPLACEMENT_MARK", swap[1])
+
+                # Now sync to file
+                #
+                self.write_db()
+
+                self.write_log('Swapped contributions {} and {}'.format(swap[0], swap[1]))
+
+                page.append('<p><strong>Successfully swapped contributions {} and {}.</strong></p>'.format(swap[0], swap[1]))
+                
+        page.append(self.render_slotplan(swap = True))
+            
+        page.append(self.config["page_footer"])
+        
+        return str(page)
+
+    swap.exposed = True
 
     def logout(self):
         """Expire the current Cherrypy session for this user.
