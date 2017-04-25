@@ -132,7 +132,9 @@ def logged_in(f):
 
             page.append(args[0].config["page_header"])
 
-            page.append('<p>Please <a href="/login">log in</a> to access this page.</p>')
+            page.append(args[0].menu())
+
+            page.append('<p><strong>Please <a href="/login">log in</a> to access this page.</strong></p>')
 
             page.append(args[0].config["page_footer"])
 
@@ -272,9 +274,9 @@ class SlotplannerWebApp:
 
         page.append(self.config["page_header"])
 
-        page.append('<h1>Slotplan for {}</h1>'.format(self.config["event"]))
+        page.append(self.menu())
 
-        page.append('<p><a href="/submit">Submit your contribution &gt;&gt;</a></p>')
+        page.append('<h1>Slotplan for {}</h1>'.format(self.config["event"]))
 
         page.append(self.render_slotplan())
             
@@ -463,6 +465,32 @@ class SlotplannerWebApp:
 
         return return_string
 
+    def menu(self):
+        """Return HTML for a menu, with contents depending on the login status.
+        """
+
+        menu_html = '<p>'
+
+        menu_html += '<a href="/">[Slotplan Home]</a>'
+
+        menu_html += ' <a href="/submit">[Submit your contribution]</a>'
+        
+        menu_html += ' <a href="/admin">[Admin]</a>'
+
+        if cherrypy.session.get("logged_in"):
+
+            menu_html += ' <a href="/slots">[Edit slots]</a>'
+
+            menu_html += ' <a href="/schedule">[Schedule contributions]</a>'
+
+            menu_html += ' <a href="/swap">[Swap contributions]</a>'
+
+            menu_html += ' <a href="/logout">[Log out]</a>'
+
+        menu_html += '</p>'
+
+        return menu_html
+
     def scheduled_contributions(self):
         """Return a list of contribution identifiers of already scheduled contributions.
         """
@@ -517,13 +545,13 @@ class SlotplannerWebApp:
 
         page.append(self.config["page_header"])
 
+        page.append(self.menu())
+
         page.append('<h1>Slotplan for {}</h1>'.format(self.config["event"]))
 
         if (not first_name) and (not last_name) and (not email) and (not twitter_handle) and (not title) and (not abstract):
         
             page.append('<h2>Submit a Contribution</h2>')
-
-            page.append('<p><a href="/">&lt;&lt; Back to slotplan home page</a></p>')
 
             form = simple.html.Form("/submit", "POST")
 
@@ -680,8 +708,6 @@ Sent by slotplanner v{} configured for "{}"
 
             page.append('<p>Your submission has <strong>successfully been saved</strong>, you are done here. Thanks a ton!</p><p>Note: your contribution will <em>not</em> immediately be visiple in the slot plan. Please be patient.</p>')
 
-            page.append('<p><a href="/">&lt;&lt; Back to slotplan home page</a></p>')
-
         page.append(self.config["page_footer"])
 
         return str(page)
@@ -697,11 +723,13 @@ Sent by slotplanner v{} configured for "{}"
 
         page.append(self.config["page_header"])
 
-        page.append('<h1>Log In</h1>')
-
         # Password can not be empty
         #
         if (not password) or (password != self.config["admin_password"]):
+
+            page.append(self.menu())
+
+            page.append('<h1>Log In</h1>')
 
             form = simple.html.Form("/login", "POST", submit_label = "Let me in!")
 
@@ -712,9 +740,11 @@ Sent by slotplanner v{} configured for "{}"
         else:
             cherrypy.session["logged_in"] = True
 
-            page.append('<p>You are now logged in.</p>')
+            page.append(self.menu())
 
-            page.append('<p><a href="/admin">Go to admin page &gt;&gt;</a></p>')
+            page.append('<h1>Log In</h1>')
+
+            page.append('<p>You are now logged in.</p>')
 
         page.append(self.config["page_footer"])
 
@@ -731,11 +761,9 @@ Sent by slotplanner v{} configured for "{}"
 
         page.append(self.config["page_header"])
 
+        page.append(self.menu())
+
         page.append('<h1>Slotplan Admin Page</h1>')
-
-        page.append('<p><a href="/">&lt;&lt; Back to slotplan home page</a></p>')
-
-        page.append('<p><a href="/logout">Log out &gt;&gt;</a></p>')
 
         page.append('<h2><a name="toc"></a>Submitted Contributions</h2>')
 
@@ -802,6 +830,8 @@ Sent by slotplanner v{} configured for "{}"
         page = simple.html.Page("Edit Slot Dimensions", css = self.config["page_css"])
 
         page.append(self.config["page_header"])
+
+        page.append(self.menu())
 
         page.append('<h1>Edit Slot Dimensions</h1>')
 
@@ -941,6 +971,8 @@ Sent by slotplanner v{} configured for "{}"
 
         page.append(self.config["page_header"])
 
+        page.append(self.menu())
+
         page.append('<h1>Schedule Contributions</h1>')
 
         if not len(self.slotplanner_db["slot_dimension_names"]):
@@ -1076,6 +1108,8 @@ Sent by slotplanner v{} configured for "{}"
 
         page.append(self.config["page_header"])
 
+        page.append(self.menu())
+
         page.append('<h1>Swap Contributions</h1>')
 
         if swap is not None:
@@ -1131,9 +1165,9 @@ Sent by slotplanner v{} configured for "{}"
 
         page.append(self.config["page_header"])
 
-        page.append('<p>You are logged out.</p>')
+        page.append(self.menu())
 
-        page.append('<p><a href="/">&lt;&lt; Back to slotplan home page</a></p>')
+        page.append('<p>You are logged out.</p>')
 
         page.append(self.config["page_footer"])
 
