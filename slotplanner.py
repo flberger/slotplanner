@@ -472,10 +472,10 @@ class SlotplannerWebApp:
 
                         contribution = self.slotplanner_db["contributions"][contribution_id]
 
-                        listing_template = '{} {}: <em>{}</em>'
+                        listing_template = '{1} {2}: <em>{3}</em>'
 
                         if swap:
-                            listing_template = '<input type="checkbox" name="swap" value="{}"> ' + listing_template
+                            listing_template = '<input type="checkbox" name="swap" value="{0}"> ' + listing_template
 
                         contribution_listing = listing_template.format(contribution_id,
                                                                        contribution["first_name"],
