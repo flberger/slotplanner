@@ -120,6 +120,50 @@ div.clear {
 }
 """
 
+MENU_CSS="""ul.menu {
+    list-style-type: none ;
+    margin: 0px ;
+    padding: 0px ;
+    }
+
+ul.menu li {
+    border: solid 1px black ;
+    border-radius: 5px ;
+    padding: 0.5em ;
+    font-size: 80% ;
+    }
+
+ul.menu li a {
+    text-decoration: none ;
+    }
+
+/* Default width: desktop screen */
+@media only screen and (min-width: 1025px)
+{
+    ul.menu li {
+        display: inline ;
+        margin: 0px 1.5em 0px 0px ;
+        }
+}
+
+/* A little smaller: tablets, small laptops etc. */
+@media only screen and (min-width: 481px) and (max-width: 1024px)
+{
+    ul.menu li {
+        display: inline ;
+        margin: 0px 1.5em 0px 0px ;
+        }
+}
+
+/* Very small: mobile phones etc. */
+@media only screen and (max-width: 480px)
+{
+    ul.menu li {
+        margin: 0px 0px 1em 0px ;
+        }
+}
+"""
+
 def logged_in(f):
     """A decorator to check for valid login before displaying a page.
     """
@@ -128,7 +172,7 @@ def logged_in(f):
 
         if not cherrypy.session.get("logged_in"):
 
-            page = simple.html.Page("Access restricted", css = args[0].config["page_css"])
+            page = simple.html.Page("Access restricted", css = args[0].config["page_css"] + MENU_CSS)
 
             page.append(args[0].config["page_header"])
 
@@ -270,7 +314,7 @@ class SlotplannerWebApp:
         """Display the root page with the current slotplan.
         """
 
-        page = simple.html.Page("slotplanner - {}".format(self.config["event"]), css = self.config["page_css"] + SLOTPLAN_TABLE_CSS)
+        page = simple.html.Page("slotplanner - {}".format(self.config["event"]), css = self.config["page_css"] + SLOTPLAN_TABLE_CSS + MENU_CSS)
 
         page.append(self.config["page_header"])
 
@@ -469,25 +513,25 @@ class SlotplannerWebApp:
         """Return HTML for a menu, with contents depending on the login status.
         """
 
-        menu_html = '<p>'
+        menu_html = '<ul class="menu">'
 
-        menu_html += '<a href="/">[Slotplan Home]</a>'
+        menu_html += '<li><a href="/">Slotplan&nbsp;Home</a></li>'
 
-        menu_html += ' <a href="/submit">[Submit your contribution]</a>'
+        menu_html += '<li> <a href="/submit">Submit&nbsp;your&nbsp;contribution</a></li>'
         
-        menu_html += ' <a href="/admin">[Admin]</a>'
+        menu_html += '<li> <a href="/admin">Admin</a></li>'
 
         if cherrypy.session.get("logged_in"):
 
-            menu_html += ' <a href="/slots">[Edit slots]</a>'
+            menu_html += '<li> <a href="/slots">Edit&nbsp;slots</a></li>'
 
-            menu_html += ' <a href="/schedule">[Schedule contributions]</a>'
+            menu_html += '<li> <a href="/schedule">Schedule&nbsp;contributions</a></li>'
 
-            menu_html += ' <a href="/swap">[Swap contributions]</a>'
+            menu_html += '<li> <a href="/swap">Swap&nbsp;contributions</a></li>'
 
-            menu_html += ' <a href="/logout">[Log out]</a>'
+            menu_html += '<li> <a href="/logout">Log&nbsp;out</a></li>'
 
-        menu_html += '</p>'
+        menu_html += '</ul>'
 
         return menu_html
 
@@ -541,7 +585,7 @@ class SlotplannerWebApp:
         """Display the contribution submission form, or handle a submission.
         """
 
-        page = simple.html.Page("Submit a Contribution", css = self.config["page_css"])
+        page = simple.html.Page("Submit a Contribution", css = self.config["page_css"] + MENU_CSS)
 
         page.append(self.config["page_header"])
 
@@ -719,7 +763,7 @@ Sent by slotplanner v{} configured for "{}"
            If called with arguments, try to log in.
         """
 
-        page = simple.html.Page("Log in", css = self.config["page_css"])
+        page = simple.html.Page("Log in", css = self.config["page_css"] + MENU_CSS)
 
         page.append(self.config["page_header"])
 
@@ -757,7 +801,7 @@ Sent by slotplanner v{} configured for "{}"
         """Slotplan administration interface.
         """
 
-        page = simple.html.Page("Admin", css = self.config["page_css"])
+        page = simple.html.Page("Admin", css = self.config["page_css"] + MENU_CSS)
 
         page.append(self.config["page_header"])
 
@@ -827,7 +871,7 @@ Sent by slotplanner v{} configured for "{}"
         """Display a form to enter slot dimensions, or process a slot dimension edit.
         """
         
-        page = simple.html.Page("Edit Slot Dimensions", css = self.config["page_css"])
+        page = simple.html.Page("Edit Slot Dimensions", css = self.config["page_css"] + MENU_CSS)
 
         page.append(self.config["page_header"])
 
@@ -968,7 +1012,7 @@ Sent by slotplanner v{} configured for "{}"
         """Display a form to schedule contributions, or process a scheduling request.
         """
 
-        page = simple.html.Page("Schedule Contributions", css = self.config["page_css"])
+        page = simple.html.Page("Schedule Contributions", css = self.config["page_css"] + MENU_CSS)
 
         page.append(self.config["page_header"])
 
@@ -1105,7 +1149,7 @@ Sent by slotplanner v{} configured for "{}"
         """Display a slotplan table with the option to swap elements, or process a swap.
         """
 
-        page = simple.html.Page("Swap Contributions", css = self.config["page_css"] + SLOTPLAN_TABLE_CSS)
+        page = simple.html.Page("Swap Contributions", css = self.config["page_css"] + SLOTPLAN_TABLE_CSS + MENU_CSS)
 
         page.append(self.config["page_header"])
 
@@ -1162,7 +1206,7 @@ Sent by slotplanner v{} configured for "{}"
 
             cherrypy.lib.sessions.expire()
 
-        page = simple.html.Page("Access restricted", css = self.config["page_css"])
+        page = simple.html.Page("Access restricted", css = self.config["page_css"] + MENU_CSS)
 
         page.append(self.config["page_header"])
 
