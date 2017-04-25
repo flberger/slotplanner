@@ -129,8 +129,8 @@ MENU_CSS="""ul.menu {
 ul.menu li {
     border: solid 1px black ;
     border-radius: 5px ;
-    padding: 0.5em ;
-    font-size: 80% ;
+    padding: 0.3em ;
+    font-size: 75% ;
     }
 
 ul.menu li a {
@@ -142,7 +142,7 @@ ul.menu li a {
 {
     ul.menu li {
         display: inline ;
-        margin: 0px 1.5em 0px 0px ;
+        margin: 0px 1em 0px 0px ;
         }
 }
 
@@ -151,7 +151,7 @@ ul.menu li a {
 {
     ul.menu li {
         display: inline ;
-        margin: 0px 1.5em 0px 0px ;
+        margin: 0px 1em 0px 0px ;
         }
 }
 
@@ -425,6 +425,10 @@ class SlotplannerWebApp:
                 and len(self.slotplanner_db["slot_dimension_names"])):
 
             return_str += '<p><strong>Currently there is no slotplan to display.</strong></p>'
+
+            if cherrypy.session.get("logged_in"):
+
+                return_str += '<p>You can <a href="/schedule">schedule some contributions</a> to fill the slotplan.</p>'
 
             return return_str
 
