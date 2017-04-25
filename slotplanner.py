@@ -928,7 +928,8 @@ Sent by slotplanner v{} configured for "{}"
             default_level_2 = "Enter level 2 elements here, one per line"
             default_level_3 = "Enter level 3 elements here, one per line"
             
-            if (len(self.slotplanner_db["slot_dimension_names"][0])
+            if (self.slotplanner_db["slot_dimension_names"]
+                and len(self.slotplanner_db["slot_dimension_names"][0])
                 and i <= len(self.slotplanner_db["slot_dimension_names"][0])):
 
                 default_level_1 = self.slotplanner_db["slot_dimension_names"][0][i - 1]
