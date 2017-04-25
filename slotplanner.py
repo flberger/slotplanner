@@ -384,13 +384,13 @@ class SlotplannerWebApp:
 
             return return_str
 
+        if swap:
+
+            return_str += '<form action="/swap" method="POST">'
+                
         for level_1_index in range(len(self.slotplanner_db["slot_dimension_names"][0])):
 
             return_str += '<h2>{}</h2>'.format(self.slotplanner_db["slot_dimension_names"][0][level_1_index])
-
-            if swap:
-
-                return_str += '<form action="/swap" method="POST">'
 
             return_str += '<div class="slotplan_table">'
 
@@ -451,9 +451,9 @@ class SlotplannerWebApp:
             #
             return_str += '</div>'
 
-            if(swap):
+        if(swap):
 
-                return_str += '<input type="submit" value="Swap contributions"></form>'
+            return_str += '<input type="submit" value="Swap contributions"></form>'
         
         return return_str
 
