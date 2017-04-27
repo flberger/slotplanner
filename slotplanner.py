@@ -762,6 +762,20 @@ Sent by slotplanner v{} configured for "{}"
 
     submit.exposed = True
 
+    def info(self):
+        """Display live track information.
+        """
+
+        page = simple.html.Page("Track Information", css = self.config["page_css"])
+
+        current_time = datetime.datetime.now()
+
+        page.append('<p>{}:{}</p>'.format(current_time.hour,
+                                          current_time.minute))
+        return str(page)
+
+    info.exposed = True
+
     def login(self, password = None):
         """If called without arguments, return a login form.
            If called with arguments, try to log in.
