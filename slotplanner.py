@@ -762,16 +762,86 @@ Sent by slotplanner v{} configured for "{}"
 
     submit.exposed = True
 
-    def info(self):
+    def info(self, **kwargs):
         """Display live track information.
+           Call info(level_1 = n, level_2 = m, level_3 = k, ...)
         """
 
         page = simple.html.Page("Track Information", css = self.config["page_css"])
 
+        # NOTE: Only displaying info for scheduled events
+        #
+        if not ("level_1" in kwargs.keys()
+                and kwargs["level_1"] in self.slotplanner_db["schedule"].keys()):
+
+            scheduled_level_1 = list(self.slotplanner_db["schedule"].keys())
+
+            scheduled_level_1.sort()
+
+            for level_1_key in scheduled_level_1:
+
+                link_template = '<p><a href="/info?level_1={}">{}</a></p>'
+
+                page.append(link_template.format(level_1_key,
+                                                 self.slotplanner_db["slot_dimension_names"][0][int(level_1_key)]))
+
+            return str(page)
+
+        elif not ("level_2" in kwargs.keys()
+                  and kwargs["level_2"] in self.slotplanner_db["schedule"][kwargs["level_1"]].keys()):
+
+            scheduled_level_2 = list(self.slotplanner_db["schedule"][kwargs["level_1"]].keys())
+
+            scheduled_level_2.sort()
+
+            for level_2_key in scheduled_level_2:
+
+                link_template = '<p><a href="/info?level_1={}&level_2={}">{}</a></p>'
+
+                page.append(link_template.format(kwargs["level_1"],
+                                                 level_2_key,
+                                                 self.slotplanner_db["slot_dimension_names"][1 + int(kwargs["level_1"])][int(level_2_key)]))
+
+            return str(page)
+
+        page.append('<h1>{}, {}</h1>'.format(self.slotplanner_db["slot_dimension_names"][0][int(kwargs["level_1"])],
+                                             self.slotplanner_db["slot_dimension_names"][1 + int(kwargs["level_1"])][int(kwargs["level_2"])]))
+
         current_time = datetime.datetime.now()
 
-        page.append('<p>{}:{}</p>'.format(current_time.hour,
-                                          current_time.minute))
+        time_str = '{:02}:{:02}'.format(current_time.hour, current_time.minute)
+
+        page.append('<p>{}</p>'.format(time_str))
+
+        level_3_name_index_id = {}
+
+        for index_id in self.slotplanner_db["schedule"][kwargs["level_1"]][kwargs["level_2"]].items():
+
+            level_3_name_index_id[self.slotplanner_db["slot_dimension_names"][1 + len(self.slotplanner_db["slot_dimension_names"][0]) + int(kwargs["level_1"])][int(index_id[0])]] = index_id
+
+        level_3_names = list(level_3_name_index_id.keys())
+
+        level_3_names.sort(reverse = True)
+
+        next_contribution = '&mdash;'
+
+        for name in level_3_names:
+
+            # NOTE: Comparing HH:MM as strings should work out alright
+            #
+            if name > time_str:
+
+                contribution = self.slotplanner_db["contributions"][level_3_name_index_id[name][1]]
+                
+                next_contribution = '{} {} {}: <em>{}</em>'.format(name,
+                                                                   contribution["first_name"],
+                                                                   contribution["last_name"],
+                                                                   contribution["title"])
+
+        page.append('<p>Next:<br>{}</p>'.format(next_contribution))
+
+        page.append('<p><a href="/info">Track overview &gt;&gt;</a></p>')
+        
         return str(page)
 
     info.exposed = True
