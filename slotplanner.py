@@ -781,42 +781,39 @@ Sent by slotplanner v{} configured for "{}"
 
         page.append(self.config["page_header"])
 
-        # NOTE: Only displaying info for scheduled events
-        #
-        if not ("level_1" in kwargs.keys()
-                and kwargs["level_1"] in self.slotplanner_db["schedule"].keys()):
+        if not ("level_1" in kwargs.keys()):
 
             page.append(self.menu())
 
-            scheduled_level_1 = list(self.slotplanner_db["schedule"].keys())
-
-            scheduled_level_1.sort()
-
-            for level_1_key in scheduled_level_1:
+            for i in range(len(self.slotplanner_db["slot_dimension_names"][0])):
 
                 link_template = '<p><a href="/info?level_1={}">{}</a></p>'
 
-                page.append(link_template.format(level_1_key,
-                                                 self.slotplanner_db["slot_dimension_names"][0][int(level_1_key)]))
+                page.append(link_template.format(str(i),
+                                                 self.slotplanner_db["slot_dimension_names"][0][i]))
 
             return str(page)
 
-        elif not ("level_2" in kwargs.keys()
-                  and kwargs["level_2"] in self.slotplanner_db["schedule"][kwargs["level_1"]].keys()):
+        elif not ("level_2" in kwargs.keys()):
 
             page.append(self.menu())
 
-            scheduled_level_2 = list(self.slotplanner_db["schedule"][kwargs["level_1"]].keys())
-
-            scheduled_level_2.sort()
-
-            for level_2_key in scheduled_level_2:
+            for i in range(len(self.slotplanner_db["slot_dimension_names"][1 + int(kwargs["level_1"])])):
 
                 link_template = '<p><a href="/info?level_1={}&level_2={}">{}</a></p>'
 
                 page.append(link_template.format(kwargs["level_1"],
-                                                 level_2_key,
-                                                 self.slotplanner_db["slot_dimension_names"][1 + int(kwargs["level_1"])][int(level_2_key)]))
+                                                 str(i),
+                                                 self.slotplanner_db["slot_dimension_names"][1 + int(kwargs["level_1"])][i]))
+
+            return str(page)
+
+        elif not (kwargs["level_1"] in self.slotplanner_db["schedule"].keys()
+                  and kwargs["level_2"] in self.slotplanner_db["schedule"][kwargs["level_1"]].keys()):
+
+            page.append(self.menu())
+
+            page.append('<p><a href="/info">Track overview &gt;&gt;</a></p>')
 
             return str(page)
 
