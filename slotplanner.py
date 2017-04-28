@@ -638,12 +638,15 @@ class SlotplannerWebApp:
             page.append('<p><strong>Please enter your last name.</strong></p><p>Use the &quot;back&quot; button of your browser to go back.</p>')
 
         # At least "a@b.c"
+        # Admin can sumbit without email
         #
-        elif (len(email) < 5) or (email.find("@") < 1) or (email.find(".") < 1):
+        elif not cherrypy.session.get("logged_in") and ((len(email) < 5)
+                                                         or (email.find("@") < 1)
+                                                         or (email.find(".") < 1)):
 
             page.append('<p><strong>I am sorry, but that does not look like a valid email address.</strong></p><p>Use the &quot;back&quot; button of your browser to go back.</p>')
 
-        elif email.strip().lower() not in [participant_email.lower() for participant_email in self.config["participants_emails"]]:
+        elif not cherrypy.session.get("logged_in") and email.strip().lower() not in [participant_email.lower() for participant_email in self.config["participants_emails"]]:
 
             page.append('<p><strong>I am sorry, but i looks like you did not sign up for the event with that email address.</strong></p><p>Use the &quot;back&quot; button of your browser to go back and enter the email address you signed up with.</p><p>Questions? Email <a href="mailto:{0}">{0}</a></p>'.format(self.config["contact_email"]))
             
