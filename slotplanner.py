@@ -1196,6 +1196,22 @@ Sent by slotplanner v{} configured for "{}"
                 #
                 index_level_1 = str(index_level_1)
 
+                # If the contribution is already scheduled, remove it.
+                #
+                if contribution_id in self.scheduled_contributions():
+
+                    for level_1_key in self.slotplanner_db["schedule"].keys():
+
+                        for level_2_key in self.slotplanner_db["schedule"][level_1_key].keys():
+
+                            # TODO: This blindly assumes level 3 is the final level.
+                            #
+                            for level_3_key in list(self.slotplanner_db["schedule"][level_1_key][level_2_key].keys()):
+
+                                if self.slotplanner_db["schedule"][level_1_key][level_2_key][level_3_key] == contribution_id:
+
+                                    del self.slotplanner_db["schedule"][level_1_key][level_2_key][level_3_key]
+
                 try:
                     self.slotplanner_db["schedule"][index_level_1][index_level_2][index_level_3] = contribution_id
 
@@ -1220,20 +1236,12 @@ Sent by slotplanner v{} configured for "{}"
 
         page.append('<p>Note: scheduling a contribution will <strong>silently replace</strong> any contribution already scheduled for the slot.</p>')
 
-        # Only display contributions that are not yet scheduled
-        #
-        contribution_ids = [identifier for identifier in self.slotplanner_db["contributions"].keys() if identifier not in self.scheduled_contributions()]
+        # Offer all contributions, including scheduled ones
 
-        if not len(contribution_ids):
-        
-            page.append('<p><strong>There are no unscheduled contributions left.</strong></p>')
-
-            page.append(self.config["page_footer"])
-
-            return str(page)
-        
         # TODO: Duplicated from admin()
-        #
+
+        contribution_ids = list(self.slotplanner_db["contributions"].keys())
+
         # IDs are string-representations of integers, but need
         # to be sorted as the latter
         #
