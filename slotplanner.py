@@ -874,8 +874,14 @@ Sent by slotplanner v{} configured for "{}"
         page.append('<p>Parallel:</p>{}'.format(parallel_list))
 
         page.append('<p><a href="/info">Track overview &gt;&gt;</a></p>')
+
+        # HACK: Retro-fit meta tag for reloading
+        #
+        page_str = str(page)
+
+        page_str = page_str.replace('</head>', '<meta http-equiv="refresh" content="60"></head>')
         
-        return str(page)
+        return page_str
 
     info.exposed = True
 
