@@ -810,6 +810,8 @@ Sent by slotplanner v{} configured for "{}"
         current_time = datetime.datetime.now()
 
         time_str = '{:02}:{:02}'.format(current_time.hour, current_time.minute)
+        #REMOVE
+        #time_str = "07:01"
 
         page.append('<p>{}</p>'.format(time_str))
 
@@ -823,7 +825,7 @@ Sent by slotplanner v{} configured for "{}"
 
         level_3_names.sort(reverse = True)
 
-        next_contribution = '&mdash;'
+        next_name = None
 
         for name in level_3_names:
 
@@ -831,14 +833,45 @@ Sent by slotplanner v{} configured for "{}"
             #
             if name > time_str:
 
-                contribution = self.slotplanner_db["contributions"][level_3_name_index_id[name][1]]
-                
-                next_contribution = '{} {} {}: <em>{}</em>'.format(name,
-                                                                   contribution["first_name"],
-                                                                   contribution["last_name"],
-                                                                   contribution["title"])
+                next_name = name
 
+        next_contribution = '&mdash;'
+        parallel_contributions = []
+
+        if next_name is not None:
+            
+            contribution = self.slotplanner_db["contributions"][level_3_name_index_id[next_name][1]]
+                
+            next_contribution = '{} {} {}: <em>{}</em>'.format(next_name,
+                                                               contribution["first_name"],
+                                                               contribution["last_name"],
+                                                               contribution["title"])
+
+            for level_2_index in self.slotplanner_db["schedule"][kwargs["level_1"]]:
+
+                if level_2_index != kwargs["level_2"]:
+
+                    for level_3_index in self.slotplanner_db["schedule"][kwargs["level_1"]][level_2_index].keys():
+
+                        if level_3_index == level_3_name_index_id[next_name][0]:
+
+                            contribution = self.slotplanner_db["contributions"][self.slotplanner_db["schedule"][kwargs["level_1"]][level_2_index][level_3_index]]
+
+                            contribution_template = '<dt>{}</dt><dd>{} {} {}: <em>{}</em></dd>'
+                
+                            parallel_contributions.append(contribution_template.format(self.slotplanner_db["slot_dimension_names"][1 + int(kwargs["level_1"])][int(level_2_index)],
+                                                                                       next_name,
+                                                                                       contribution["first_name"],
+                                                                                       contribution["last_name"],
+                                                                                       contribution["title"]))
+                            
         page.append('<p>Next:<br>{}</p>'.format(next_contribution))
+
+        parallel_list = ''.join(parallel_contributions)
+
+        parallel_list = '<dl>{}</dl>'.format(parallel_list)
+
+        page.append('<p>Parallel:</p>{}'.format(parallel_list))
 
         page.append('<p><a href="/info">Track overview &gt;&gt;</a></p>')
         
