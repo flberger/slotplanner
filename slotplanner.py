@@ -59,11 +59,11 @@ div.slotplan_row_odd {
     background: rgb(223, 223, 223) ;
     }
 
-div.slotplan_header, div.slotplan_index, div.slotplan_cell {
+div.slotplan_header, div.slotplan_header_first, div.slotplan_index, div.slotplan_cell {
     padding: 0.3em 0px ;
     }
 
-div.slotplan_header {
+div.slotplan_header, div.slotplan_header_first {
     font-weight: bold ;
     border-bottom: solid 1px black ;
     }
@@ -79,9 +79,14 @@ div.clear {
         border-top: solid 1px black ;
         }
 
-    div.slotplan_header, div.slotplan_index, div.slotplan_cell {
+    div.slotplan_header, div.slotplan_cell {
         float: left ;
         width: 11.6em ;
+        }
+
+    div.slotplan_header_first, div.slotplan_index {
+        float: left ;
+        width: 6em ;
         }
 
     span.slotplan_hint {
@@ -96,7 +101,7 @@ div.clear {
         border-top: solid 1px black ;
         }
 
-    div.slotplan_header, div.slotplan_index, div.slotplan_cell {
+    div.slotplan_header, div.slotplan_header_first, div.slotplan_index, div.slotplan_cell {
         float: left ;
         width: 6em ;
         }
@@ -109,7 +114,7 @@ div.clear {
 /* Very small: mobile phones etc. */
 @media only screen and (max-width: 480px)
 {
-    div.slotplan_header {
+    div.slotplan_header, div.slotplan_header_first {
         display: none ;
         }
 
@@ -444,7 +449,7 @@ class SlotplannerWebApp:
 
             return_str += '<div class="slotplan_row_even">'
 
-            return_str += '<div class="slotplan_header">&nbsp;</div>'
+            return_str += '<div class="slotplan_header_first">&nbsp;</div>'
                 
             for level_2 in self.slotplanner_db["slot_dimension_names"][1 + level_1_index]:
 
