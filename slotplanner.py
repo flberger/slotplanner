@@ -521,6 +521,8 @@ class SlotplannerWebApp:
 
         menu_html += '<li><a href="/">Slotplan&nbsp;Home</a></li>'
 
+        menu_html += '<li><a href="/info">Track&nbsp;info</a></li>'
+
         menu_html += '<li> <a href="/submit">Submit&nbsp;your&nbsp;contribution</a></li>'
         
         menu_html += '<li> <a href="/admin">Admin</a></li>'
@@ -767,12 +769,16 @@ Sent by slotplanner v{} configured for "{}"
            Call info(level_1 = n, level_2 = m, level_3 = k, ...)
         """
 
-        page = simple.html.Page("Track Information", css = self.config["page_css"])
+        page = simple.html.Page("Track Information", css = self.config["page_css"] + MENU_CSS)
+
+        page.append(self.config["page_header"])
 
         # NOTE: Only displaying info for scheduled events
         #
         if not ("level_1" in kwargs.keys()
                 and kwargs["level_1"] in self.slotplanner_db["schedule"].keys()):
+
+            page.append(self.menu())
 
             scheduled_level_1 = list(self.slotplanner_db["schedule"].keys())
 
@@ -790,6 +796,8 @@ Sent by slotplanner v{} configured for "{}"
         elif not ("level_2" in kwargs.keys()
                   and kwargs["level_2"] in self.slotplanner_db["schedule"][kwargs["level_1"]].keys()):
 
+            page.append(self.menu())
+
             scheduled_level_2 = list(self.slotplanner_db["schedule"][kwargs["level_1"]].keys())
 
             scheduled_level_2.sort()
@@ -804,16 +812,15 @@ Sent by slotplanner v{} configured for "{}"
 
             return str(page)
 
-        page.append('<h1>{}, {}</h1>'.format(self.slotplanner_db["slot_dimension_names"][0][int(kwargs["level_1"])],
-                                             self.slotplanner_db["slot_dimension_names"][1 + int(kwargs["level_1"])][int(kwargs["level_2"])]))
-
         current_time = datetime.datetime.now()
 
         time_str = '{:02}:{:02}'.format(current_time.hour, current_time.minute)
         #REMOVE
         #time_str = "07:01"
 
-        page.append('<p>{}</p>'.format(time_str))
+        page.append('<h1>{}, {} <span style="margin-left:6em;">{}</span></h1>'.format(self.slotplanner_db["slot_dimension_names"][0][int(kwargs["level_1"])],
+                                                self.slotplanner_db["slot_dimension_names"][1 + int(kwargs["level_1"])][int(kwargs["level_2"])],
+                                                time_str))
 
         level_3_name_index_id = {}
 
@@ -842,7 +849,7 @@ Sent by slotplanner v{} configured for "{}"
             
             contribution = self.slotplanner_db["contributions"][level_3_name_index_id[next_name][1]]
                 
-            next_contribution = '{} {} {}: <em>{}</em>'.format(next_name,
+            next_contribution = '<strong>{}</strong> {} {}: <em>{}</em>'.format(next_name,
                                                                contribution["first_name"],
                                                                contribution["last_name"],
                                                                contribution["title"])
@@ -857,7 +864,7 @@ Sent by slotplanner v{} configured for "{}"
 
                             contribution = self.slotplanner_db["contributions"][self.slotplanner_db["schedule"][kwargs["level_1"]][level_2_index][level_3_index]]
 
-                            contribution_template = '<dt>{}</dt><dd>{} {} {}: <em>{}</em></dd>'
+                            contribution_template = '<p><span style="font-weight:bold;margin-right:4em;">{}</span>{} {} {}: <em>{}</em></p>'
                 
                             parallel_contributions.append(contribution_template.format(self.slotplanner_db["slot_dimension_names"][1 + int(kwargs["level_1"])][int(level_2_index)],
                                                                                        next_name,
@@ -867,9 +874,11 @@ Sent by slotplanner v{} configured for "{}"
                             
         page.append('<p>Next:<br>{}</p>'.format(next_contribution))
 
+        parallel_contributions.sort()
+
         parallel_list = ''.join(parallel_contributions)
 
-        parallel_list = '<dl>{}</dl>'.format(parallel_list)
+        #parallel_list = '<dl>{}</dl>'.format(parallel_list)
 
         page.append('<p>Parallel:</p>{}'.format(parallel_list))
 
